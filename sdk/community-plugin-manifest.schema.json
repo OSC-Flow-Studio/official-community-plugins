@@ -7,6 +7,7 @@
       "pattern": "^[a-z0-9][a-z0-9-]{1,40}$",
       "not": {
         "enum": [
+          "device",
           "discord",
           "obs-control",
           "openshock",
@@ -44,7 +45,14 @@
           "enum": [
             "safety-notice"
           ]
-        }
+        },
+        "examples": [
+          "triggers",
+          "actions",
+          "templates",
+          "secrets",
+          "haptics"
+        ]
       },
       "description": "Capability labels shown during installation."
     },
@@ -310,6 +318,100 @@
       "additionalProperties": false,
       "description": "Settings form rendered by OSC Flow Studio."
     },
+    "appearance": {
+      "type": "object",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "enum": [
+            "puzzle",
+            "box",
+            "package",
+            "plug",
+            "cable",
+            "cpu",
+            "bot",
+            "sparkles",
+            "star",
+            "heart",
+            "heart-pulse",
+            "hand",
+            "hand-heart",
+            "flame",
+            "droplet",
+            "lightbulb",
+            "rocket",
+            "gift",
+            "trophy",
+            "target",
+            "crosshair",
+            "layers",
+            "database",
+            "calendar",
+            "clock",
+            "timer",
+            "bell",
+            "bell-ring",
+            "eye",
+            "user",
+            "users",
+            "globe",
+            "webhook",
+            "send",
+            "message-square",
+            "mic",
+            "music",
+            "audio-waveform",
+            "speaker",
+            "camera",
+            "tv",
+            "monitor",
+            "smartphone",
+            "gamepad-2",
+            "joystick",
+            "radio",
+            "radio-tower",
+            "wifi",
+            "bluetooth",
+            "signal",
+            "satellite",
+            "radar",
+            "activity",
+            "waves",
+            "vibrate",
+            "gauge",
+            "thermometer",
+            "coins",
+            "badge-dollar-sign",
+            "power",
+            "circle-stop",
+            "scan-line"
+          ],
+          "description": "Lucide icon name from the OSC Flow Studio allowlist."
+        },
+        "accent": {
+          "type": "string",
+          "enum": [
+            "orange",
+            "amber",
+            "lime",
+            "green",
+            "teal",
+            "cyan",
+            "sky",
+            "blue",
+            "indigo",
+            "violet",
+            "fuchsia",
+            "pink",
+            "slate"
+          ],
+          "description": "Accent color token for every block of the plugin."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Icon and accent for the plugin card and its blocks. Plugins cannot ship images: name an icon from the list and an accent token."
+    },
     "nodeTypes": {
       "type": "array",
       "items": {
@@ -441,6 +543,13 @@
                 },
                 "optional": {
                   "type": "boolean"
+                },
+                "durationBaseUnit": {
+                  "type": "string",
+                  "enum": [
+                    "ms",
+                    "s"
+                  ]
                 }
               },
               "required": [
@@ -474,6 +583,16 @@
               ],
               "additionalProperties": false
             }
+          },
+          "appearance": {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "$ref": "#/properties/appearance/properties/icon"
+              }
+            },
+            "additionalProperties": false,
+            "description": "The block's own icon. Without one the block uses the plugin icon."
           }
         },
         "required": [
@@ -516,6 +635,9 @@
                 "type": "boolean",
                 "default": true
               },
+              "archived": {
+                "type": "boolean"
+              },
               "nodes": {
                 "type": "array",
                 "items": {
@@ -552,6 +674,42 @@
                                 "debugLabel": {
                                   "type": "string",
                                   "maxLength": 64
+                                },
+                                "saveToVariables": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 64
+                                      },
+                                      "path": {
+                                        "type": "string",
+                                        "maxLength": 200,
+                                        "default": ""
+                                      },
+                                      "variableName": {
+                                        "type": "string",
+                                        "maxLength": 64,
+                                        "default": ""
+                                      },
+                                      "variableScope": {
+                                        "type": "string",
+                                        "enum": [
+                                          "local",
+                                          "shared",
+                                          "global"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "maxItems": 16
                                 },
                                 "localCommands": {
                                   "type": "array",
@@ -713,61 +871,6 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "const": "trigger.desktop.gamepad"
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "displayName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/displayName"
-                                },
-                                "disabled": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/disabled"
-                                },
-                                "errorOutputEnabled": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/errorOutputEnabled"
-                                },
-                                "stopOnError": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/stopOnError"
-                                },
-                                "debugOutput": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/debugOutput"
-                                },
-                                "debugLabel": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/debugLabel"
-                                },
-                                "deviceId": {
-                                  "type": "string",
-                                  "maxLength": 160,
-                                  "default": ""
-                                },
-                                "buttons": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 96,
-                                    "pattern": "^[A-Za-z0-9:_-]+$"
-                                  },
-                                  "minItems": 1,
-                                  "maxItems": 16
-                                },
-                                "cooldown": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
-                                }
-                              },
-                              "required": [
-                                "type",
-                                "id",
-                                "buttons"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "type": {
-                                  "type": "string",
                                   "const": "action.osc.send"
                                 },
                                 "id": {
@@ -847,7 +950,7 @@
                                             ]
                                           },
                                           "value": {
-                                            "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                            "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                           }
                                         },
                                         "required": [
@@ -949,7 +1052,7 @@
                                   "type": "string"
                                 },
                                 "meters": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "maxMeters": {
                                   "type": "number",
@@ -1014,7 +1117,7 @@
                                             "value": {
                                               "anyOf": [
                                                 {
-                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                                 },
                                                 {
                                                   "type": "object",
@@ -1083,7 +1186,24 @@
                                   "default": ""
                                 },
                                 "name": {
-                                  "type": "string"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "matchMode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "exact",
+                                    "glob",
+                                    "regex"
+                                  ],
+                                  "default": "exact"
+                                },
+                                "inputMode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "picker",
+                                    "formula"
+                                  ],
+                                  "default": "picker"
                                 },
                                 "parameterSource": {
                                   "type": "string",
@@ -1093,17 +1213,12 @@
                                   ]
                                 },
                                 "paramType": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/4/properties/mappings/items/properties/parameters/items/properties/paramType"
-                                },
-                                "variableName": {
-                                  "type": "string",
-                                  "default": ""
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/3/properties/mappings/items/properties/parameters/items/properties/paramType"
                                 }
                               },
                               "required": [
                                 "type",
-                                "id",
-                                "name"
+                                "id"
                               ],
                               "additionalProperties": false
                             },
@@ -1139,7 +1254,7 @@
                                   "type": "string"
                                 },
                                 "avatarId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "inputMode": {
                                   "type": "string",
@@ -1167,7 +1282,7 @@
                                   "type": "string"
                                 },
                                 "ms": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -1266,7 +1381,7 @@
                                   "type": "string"
                                 },
                                 "text": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "sendImmediately": {
                                   "type": "boolean",
@@ -1325,7 +1440,7 @@
                                   "default": "info"
                                 },
                                 "message": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -1378,6 +1493,142 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
+                                  "const": "trigger.desktop.gamepad"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "deviceId": {
+                                  "type": "string",
+                                  "maxLength": 160,
+                                  "default": ""
+                                },
+                                "buttons": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 96,
+                                    "pattern": "^[A-Za-z0-9:_-]+$"
+                                  },
+                                  "minItems": 1,
+                                  "maxItems": 16
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id",
+                                "buttons"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "trigger.device.processStart"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "targetKind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "process",
+                                    "service"
+                                  ],
+                                  "default": "process"
+                                },
+                                "targetName": {
+                                  "type": "string",
+                                  "maxLength": 260,
+                                  "default": ""
+                                },
+                                "instanceMode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "app",
+                                    "each"
+                                  ],
+                                  "default": "app"
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "trigger.device.processEnd"
+                                },
+                                "id": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/id"
+                                },
+                                "targetKind": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/targetKind"
+                                },
+                                "targetName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/targetName"
+                                },
+                                "instanceMode": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/instanceMode"
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "trigger.device.keyPressed"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "keys": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "pattern": "^(?:[A-Za-z][A-Za-z0-9]{0,63})$"
+                                  },
+                                  "maxItems": 8,
+                                  "default": []
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
                                   "const": "action.desktop.keyChord"
                                 },
                                 "id": {
@@ -1394,8 +1645,7 @@
                                 "keys": {
                                   "type": "array",
                                   "items": {
-                                    "type": "string",
-                                    "pattern": "^(?:[A-Za-z][A-Za-z0-9]{0,63})$"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/17/properties/keys/items"
                                   },
                                   "minItems": 1,
                                   "maxItems": 8
@@ -1406,7 +1656,7 @@
                                     "type": "object",
                                     "properties": {
                                       "keys": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/keys"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/18/properties/keys"
                                       }
                                     },
                                     "required": [
@@ -1463,7 +1713,7 @@
                                   "type": "string"
                                 },
                                 "audioDeviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "audioDeviceName": {
                                   "type": "string",
@@ -1487,11 +1737,113 @@
                                   "type": "string"
                                 },
                                 "audioDeviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "audioDeviceName": {
                                   "type": "string",
                                   "maxLength": 256
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.device.getProcessList"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "listKind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "process",
+                                    "service"
+                                  ],
+                                  "default": "process"
+                                },
+                                "nameFilter": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.device.getProcessDetail"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "targetKind": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/15/properties/targetKind",
+                                  "default": "process"
+                                },
+                                "targetName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.device.killProcess"
+                                },
+                                "id": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/23/properties/id"
+                                },
+                                "targetKind": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/23/properties/targetKind"
+                                },
+                                "targetName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.device.getMetrics"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "timelineItems": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "default": 6
+                                },
+                                "timelineSpacingSeconds": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "default": 5
                                 }
                               },
                               "required": [
@@ -1523,24 +1875,24 @@
                                     "type": "object",
                                     "properties": {
                                       "connectionId": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                       },
                                       "shockerId": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/shockerId"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/shockerId"
                                       }
                                     },
                                     "additionalProperties": false
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 15
                                   }
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1000
@@ -1550,8 +1902,11 @@
                                   "type": "object",
                                   "properties": {
                                     "enabled": {
-                                      "type": "boolean",
-                                      "default": false
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                      "default": {
+                                        "mode": "fixed",
+                                        "value": false
+                                      }
                                     },
                                     "intensity": {
                                       "anyOf": [
@@ -1684,14 +2039,14 @@
                                       }
                                     },
                                     "durationSec": {
-                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity",
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity",
                                       "default": {
                                         "kind": "literal",
                                         "value": 1
                                       }
                                     },
                                     "delaySec": {
-                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity",
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity",
                                       "default": {
                                         "kind": "literal",
                                         "value": 1
@@ -1718,22 +2073,22 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/targets/items"
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/intensity"
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/durationMs"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/durationMs"
                                 }
                               },
                               "required": [
@@ -1753,22 +2108,22 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/targets/items"
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/intensity"
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/durationMs"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/durationMs"
                                 }
                               },
                               "required": [
@@ -1788,15 +2143,15 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/targets/items"
                                   }
                                 }
                               },
@@ -1817,15 +2172,15 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/targets/items"
                                   }
                                 },
                                 "paused": {
@@ -1850,7 +2205,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
                                   "type": "string"
@@ -1861,31 +2216,31 @@
                                     "type": "object",
                                     "properties": {
                                       "connectionId": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                       },
                                       "shockerId": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/shockerId"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/shockerId"
                                       }
                                     },
                                     "additionalProperties": false
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 15
                                   }
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1000
                                   }
                                 },
                                 "warn": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn"
                                 }
                               },
                               "required": [
@@ -1905,22 +2260,22 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/targets/items"
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/intensity"
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/durationMs"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/durationMs"
                                 }
                               },
                               "required": [
@@ -1940,22 +2295,22 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/connectionId"
                                 },
                                 "shockerId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/shockerId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/shockerId"
                                 },
                                 "targets": {
                                   "type": "array",
                                   "items": {
-                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/targets/items"
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/targets/items"
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/intensity"
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/24/properties/durationMs"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/31/properties/durationMs"
                                 }
                               },
                               "required": [
@@ -2029,7 +2384,7 @@
                                   "minLength": 1
                                 },
                                 "allowedRoles": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/27/properties/allowedRoles"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/34/properties/allowedRoles"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -2313,7 +2668,7 @@
                                   "type": "string"
                                 },
                                 "message": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -2471,13 +2826,13 @@
                                   "type": "string"
                                 },
                                 "content": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "username": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "avatarUrl": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "embeds": {
                                   "type": "array",
@@ -2485,22 +2840,22 @@
                                     "type": "object",
                                     "properties": {
                                       "title": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "description": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "color": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "footer": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "thumbnail": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "image": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "timestamp": {
                                         "type": "boolean"
@@ -2511,10 +2866,10 @@
                                           "type": "object",
                                           "properties": {
                                             "name": {
-                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                             },
                                             "value": {
-                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                             },
                                             "inline": {
                                               "type": "boolean"
@@ -2571,7 +2926,7 @@
                                   "type": "string"
                                 },
                                 "operation": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/46/properties/operation",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/53/properties/operation",
                                   "default": "toggle"
                                 }
                               },
@@ -2792,10 +3147,10 @@
                                   "default": "any"
                                 },
                                 "commandName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "textPattern": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -2821,10 +3176,10 @@
                                   "type": "string"
                                 },
                                 "chatId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "text": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "parseMode": {
                                   "type": "string",
@@ -2879,7 +3234,7 @@
                                   "default": "exists"
                                 },
                                 "expectedValue": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -2913,7 +3268,7 @@
                                   "default": "text"
                                 },
                                 "payload": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -2969,9 +3324,6 @@
                                 },
                                 "id": {
                                   "type": "string"
-                                },
-                                "saveToVariableName": {
-                                  "type": "string"
                                 }
                               },
                               "required": [
@@ -3022,7 +3374,7 @@
                                   "const": "trigger.steamvr.application"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3036,13 +3388,13 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
                                 },
                                 "applicationId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 }
                               },
                               "required": [
@@ -3059,7 +3411,7 @@
                                   "const": "trigger.steamvr.dashboard"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3071,7 +3423,7 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3091,7 +3443,7 @@
                                   "const": "trigger.steamvr.hmdActivity"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3105,7 +3457,7 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3125,7 +3477,7 @@
                                   "const": "trigger.steamvr.deviceConnection"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3138,7 +3490,7 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3158,7 +3510,7 @@
                                   "const": "trigger.steamvr.battery"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3172,7 +3524,7 @@
                                   "default": "below"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3203,7 +3555,7 @@
                                   "const": "trigger.steamvr.input"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3218,13 +3570,13 @@
                                   "default": "press"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
                                 },
                                 "slot": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId",
                                   "default": "digital_01"
                                 },
                                 "threshold": {
@@ -3260,7 +3612,7 @@
                                   "const": "trigger.steamvr.tracking"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3272,7 +3624,7 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3292,7 +3644,7 @@
                                   "const": "trigger.steamvr.overlayButton"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3300,13 +3652,13 @@
                                   "default": "any"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
                                 },
                                 "eventKey": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId",
                                   "default": "button"
                                 }
                               },
@@ -3324,7 +3676,7 @@
                                   "const": "trigger.steamvr.performance"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3336,7 +3688,7 @@
                                   "default": "degraded"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3357,7 +3709,7 @@
                                   "default": 20
                                 },
                                 "hysteresis": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/67/properties/hysteresis"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/74/properties/hysteresis"
                                 },
                                 "durationMs": {
                                   "type": "integer",
@@ -3380,7 +3732,7 @@
                                   "const": "trigger.steamvr.cableTurns"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3393,7 +3745,7 @@
                                   "default": "absolute"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3419,7 +3771,7 @@
                                   "const": "trigger.steamvr.sessionDuration"
                                 },
                                 "id": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/id"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/id"
                                 },
                                 "event": {
                                   "type": "string",
@@ -3431,7 +3783,7 @@
                                   "default": "reached"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3468,11 +3820,11 @@
                                   "default": "toast"
                                 },
                                 "title": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": ""
                                 },
                                 "body": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": ""
                                 },
                                 "icon": {
@@ -3620,6 +3972,22 @@
                                     "variable",
                                     "cube",
                                     "cubeTransparent",
+                                    "headset",
+                                    "keyboard",
+                                    "mouse",
+                                    "webcam",
+                                    "hardDrive",
+                                    "plug",
+                                    "bluetooth",
+                                    "batteryCharging",
+                                    "batteryLow",
+                                    "batteryWarning",
+                                    "vibrate",
+                                    "flashlight",
+                                    "lightbulbOff",
+                                    "glasses",
+                                    "toggleLeft",
+                                    "toggleRight",
                                     "home",
                                     "homeModern",
                                     "arrowUp",
@@ -3806,6 +4174,104 @@
                                     "bars3BottomLeft",
                                     "bars3CenterLeft",
                                     "bars3BottomRight",
+                                    "gamepad2",
+                                    "joystick",
+                                    "dice5",
+                                    "swords",
+                                    "sword",
+                                    "shield",
+                                    "shieldAlert",
+                                    "crosshair",
+                                    "target",
+                                    "skull",
+                                    "ghost",
+                                    "crown",
+                                    "medal",
+                                    "award",
+                                    "gem",
+                                    "bomb",
+                                    "wandSparkles",
+                                    "partyPopper",
+                                    "drama",
+                                    "handMetal",
+                                    "heartCrack",
+                                    "heartHandshake",
+                                    "handHeart",
+                                    "handshake",
+                                    "laugh",
+                                    "angry",
+                                    "meh",
+                                    "siren",
+                                    "radar",
+                                    "infinity",
+                                    "headphones",
+                                    "guitar",
+                                    "drum",
+                                    "piano",
+                                    "micVocal",
+                                    "podcast",
+                                    "radioTower",
+                                    "clapperboard",
+                                    "popcorn",
+                                    "cast",
+                                    "cloudRain",
+                                    "cloudLightning",
+                                    "cloudSnow",
+                                    "snowflake",
+                                    "droplet",
+                                    "droplets",
+                                    "wind",
+                                    "thermometer",
+                                    "umbrella",
+                                    "leaf",
+                                    "flower2",
+                                    "treePine",
+                                    "mountain",
+                                    "waves",
+                                    "rainbow",
+                                    "sunrise",
+                                    "sunset",
+                                    "tornado",
+                                    "cat",
+                                    "dog",
+                                    "bird",
+                                    "fish",
+                                    "rabbit",
+                                    "pawPrint",
+                                    "turtle",
+                                    "coffee",
+                                    "beer",
+                                    "wine",
+                                    "pizza",
+                                    "cookie",
+                                    "candy",
+                                    "iceCreamCone",
+                                    "utensils",
+                                    "apple",
+                                    "timer",
+                                    "hourglass",
+                                    "alarmClock",
+                                    "shirt",
+                                    "dumbbell",
+                                    "bed",
+                                    "bath",
+                                    "baby",
+                                    "footprints",
+                                    "palette",
+                                    "brush",
+                                    "paintBucket",
+                                    "eraser",
+                                    "ruler",
+                                    "hammer",
+                                    "magnet",
+                                    "anchor",
+                                    "compass",
+                                    "tent",
+                                    "car",
+                                    "bike",
+                                    "plane",
+                                    "trainFront",
+                                    "ship",
                                     "playSolid",
                                     "pauseSolid",
                                     "squareSolid",
@@ -4172,7 +4638,32 @@
                                   "default": 0
                                 },
                                 "deduplicationKey": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "transition": {
+                                  "type": "string",
+                                  "enum": [
+                                    "slide",
+                                    "fade",
+                                    "pop",
+                                    "zoom",
+                                    "bounce",
+                                    "elastic",
+                                    "flip",
+                                    "wipe",
+                                    "none"
+                                  ],
+                                  "default": "slide"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "enum": [
+                                    "up",
+                                    "down",
+                                    "left",
+                                    "right"
+                                  ],
+                                  "default": "up"
                                 }
                               },
                               "required": [
@@ -4202,7 +4693,7 @@
                                   "default": "toggle"
                                 },
                                 "pageId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
                                 }
                               },
                               "required": [
@@ -4266,11 +4757,32 @@
                                   "type": "string"
                                 },
                                 "deviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId",
                                   "default": ""
                                 },
-                                "saveToVariableName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId"
+                                "deviceIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId"
+                                  },
+                                  "maxItems": 64,
+                                  "default": []
+                                },
+                                "roles": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "headset",
+                                      "controller",
+                                      "left",
+                                      "right",
+                                      "tracker",
+                                      "other"
+                                    ]
+                                  },
+                                  "maxItems": 6,
+                                  "default": []
                                 }
                               },
                               "required": [
@@ -4324,11 +4836,11 @@
                                   "type": "string"
                                 },
                                 "buttonId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/62/properties/deviceId",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId",
                                   "default": ""
                                 },
                                 "label": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "icon": {
                                   "anyOf": [
@@ -4337,13 +4849,13 @@
                                       "const": ""
                                     },
                                     {
-                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/74/properties/icon"
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/icon"
                                     }
                                   ],
                                   "default": ""
                                 },
                                 "description": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "textAlign": {
                                   "type": "string",
@@ -4374,10 +4886,114 @@
                                   "default": "keep"
                                 },
                                 "color": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "statusColor": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "restore": {
+                                  "type": "boolean",
+                                  "default": false
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.steamvr.updateCard"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "cardId": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/69/properties/deviceId",
+                                  "default": ""
+                                },
+                                "value": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "title": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "icon": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "const": ""
+                                    },
+                                    {
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/icon"
+                                    }
+                                  ],
+                                  "default": ""
+                                },
+                                "description": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "color": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "fillStyle": {
+                                  "type": "string",
+                                  "enum": [
+                                    "keep",
+                                    "solid",
+                                    "gradient"
+                                  ],
+                                  "default": "keep"
+                                },
+                                "fillColor": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "thresholdsMode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "keep",
+                                    "set",
+                                    "clear"
+                                  ],
+                                  "default": "keep"
+                                },
+                                "thresholds": {
+                                  "type": "object",
+                                  "properties": {
+                                    "base": {
+                                      "type": "string",
+                                      "pattern": "^#[0-9a-fA-F]{6}$"
+                                    },
+                                    "steps": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "value": {
+                                            "type": "number"
+                                          },
+                                          "color": {
+                                            "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/88/properties/thresholds/properties/base"
+                                          }
+                                        },
+                                        "required": [
+                                          "value",
+                                          "color"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "maxItems": 8,
+                                      "default": []
+                                    }
+                                  },
+                                  "required": [
+                                    "base"
+                                  ],
+                                  "additionalProperties": false
                                 },
                                 "restore": {
                                   "type": "boolean",
@@ -4414,17 +5030,17 @@
                                   "default": "setProgramScene"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "transitionName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "transitionDurationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -4444,7 +5060,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4457,14 +5073,14 @@
                                   "default": "show"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -4481,16 +5097,16 @@
                                   "default": "png"
                                 },
                                 "imageFilePath": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "imageWidth": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "imageHeight": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "imageCompressionQuality": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -4510,7 +5126,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4523,14 +5139,14 @@
                                   "default": "toggleMute"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "volumeDb": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -4550,7 +5166,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4592,7 +5208,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4607,7 +5223,7 @@
                                   "default": "play"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -4631,7 +5247,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4642,7 +5258,7 @@
                                   "default": "setProfile"
                                 },
                                 "name": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -4666,7 +5282,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4678,14 +5294,14 @@
                                   "default": "toggle"
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "filterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -4709,7 +5325,7 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "operation": {
                                   "type": "string",
@@ -4738,21 +5354,547 @@
                                   "type": "string"
                                 },
                                 "connectionId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/81/properties/connectionId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "requestType": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "requestData": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": "{}"
                                   }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.inputSettings"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "inputName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "settings": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": "{}"
+                                  }
+                                },
+                                "overlay": {
+                                  "type": "boolean",
+                                  "default": true
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.transform"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "operation": {
+                                  "type": "string",
+                                  "enum": [
+                                    "setPosition",
+                                    "setScale",
+                                    "setRotation",
+                                    "setCrop",
+                                    "setLocked",
+                                    "setIndex"
+                                  ],
+                                  "default": "setPosition"
+                                },
+                                "sceneName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "sourceName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "positionX": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "positionY": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "scaleX": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 1
+                                  }
+                                },
+                                "scaleY": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 1
+                                  }
+                                },
+                                "rotation": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "cropLeft": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "cropRight": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "cropTop": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "cropBottom": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                },
+                                "locked": {
+                                  "type": "boolean",
+                                  "default": false
+                                },
+                                "index": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": 0
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.transition"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "operation": {
+                                  "type": "string",
+                                  "enum": [
+                                    "setCurrent",
+                                    "setDuration",
+                                    "setCurrentAndDuration"
+                                  ],
+                                  "default": "setCurrent"
+                                },
+                                "transitionName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "transitionDurationMs": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.customEvent"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "eventData": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": "{}"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getSceneState"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getStreamStatus"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getRecordStatus"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getStats"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getVersion"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getInputState"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "inputName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getSourceState"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "sceneName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "sourceName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getMediaState"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "inputName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.obs.getFilterState"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "sourceName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                },
+                                "filterName": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "default": {
+                                    "mode": "fixed",
+                                    "value": ""
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "trigger.obs.connectionChanged",
+                                    "trigger.obs.programSceneChanged",
+                                    "trigger.obs.previewSceneChanged",
+                                    "trigger.obs.sceneListChanged",
+                                    "trigger.obs.streamStateChanged",
+                                    "trigger.obs.recordStateChanged",
+                                    "trigger.obs.recordFileChanged",
+                                    "trigger.obs.replayBufferStateChanged",
+                                    "trigger.obs.replayBufferSaved",
+                                    "trigger.obs.virtualCamStateChanged",
+                                    "trigger.obs.sourceVisibilityChanged",
+                                    "trigger.obs.inputMuteChanged",
+                                    "trigger.obs.inputVolumeChanged",
+                                    "trigger.obs.inputActiveChanged",
+                                    "trigger.obs.inputCreated",
+                                    "trigger.obs.inputRemoved",
+                                    "trigger.obs.mediaPlaybackChanged",
+                                    "trigger.obs.filterStateChanged",
+                                    "trigger.obs.transitionStateChanged",
+                                    "trigger.obs.profileChanged",
+                                    "trigger.obs.sceneCollectionChanged",
+                                    "trigger.obs.studioModeChanged",
+                                    "trigger.obs.screenshotSaved",
+                                    "trigger.obs.customEvent",
+                                    "trigger.obs.vendorEvent",
+                                    "trigger.obs.exitStarted"
+                                  ]
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "connectionId": {
+                                  "type": "string"
+                                },
+                                "sceneName": {
+                                  "type": "string"
+                                },
+                                "sourceName": {
+                                  "type": "string"
+                                },
+                                "inputName": {
+                                  "type": "string"
+                                },
+                                "filterName": {
+                                  "type": "string"
+                                },
+                                "transitionName": {
+                                  "type": "string"
+                                },
+                                "vendorName": {
+                                  "type": "string"
+                                },
+                                "eventType": {
+                                  "type": "string"
+                                },
+                                "state": {
+                                  "type": "string",
+                                  "enum": [
+                                    "any",
+                                    "on",
+                                    "off"
+                                  ],
+                                  "default": "any"
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
                                 }
                               },
                               "required": [
@@ -4915,7 +6057,7 @@
                                   "type": "string"
                                 },
                                 "profileId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/90/properties/voiceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/112/properties/voiceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -4978,7 +6120,7 @@
                                   "type": "string"
                                 },
                                 "parameterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/90/properties/voiceId"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/112/properties/voiceId"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -5001,7 +6143,7 @@
                                   "type": "string"
                                 },
                                 "voiceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -5073,7 +6215,7 @@
                                   "type": "string"
                                 },
                                 "mode": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/103/properties/mode"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/125/properties/mode"
                                 }
                               },
                               "required": [
@@ -5093,7 +6235,7 @@
                                   "type": "string"
                                 },
                                 "mode": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/103/properties/mode"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/125/properties/mode"
                                 }
                               },
                               "required": [
@@ -5113,7 +6255,7 @@
                                   "type": "string"
                                 },
                                 "mode": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/103/properties/mode"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/125/properties/mode"
                                 }
                               },
                               "required": [
@@ -5154,7 +6296,7 @@
                                   "type": "string"
                                 },
                                 "soundId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "isKeyDown": {
                                   "type": "boolean",
@@ -5195,7 +6337,7 @@
                                   "type": "string"
                                 },
                                 "mode": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/103/properties/mode"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/125/properties/mode"
                                 }
                               },
                               "required": [
@@ -5215,10 +6357,10 @@
                                   "type": "string"
                                 },
                                 "parameterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "value": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 }
                               },
                               "required": [
@@ -5334,7 +6476,7 @@
                                   "type": "string"
                                 },
                                 "resourceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -5373,12 +6515,14 @@
                                         "type": "string"
                                       },
                                       "address": {
-                                        "type": "string"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                       },
                                       "matchMode": {
                                         "type": "string",
                                         "enum": [
-                                          "exact"
+                                          "exact",
+                                          "glob",
+                                          "regex"
                                         ],
                                         "default": "exact"
                                       },
@@ -5417,8 +6561,7 @@
                                       }
                                     },
                                     "required": [
-                                      "id",
-                                      "address"
+                                      "id"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -5486,6 +6629,102 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
+                                  "const": "trigger.variable.valueChanged"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "watch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "var"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "name"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "shared"
+                                        },
+                                        "alias": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "alias"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "global"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "name"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "expression"
+                                        },
+                                        "expression": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "expression"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  ],
+                                  "default": {
+                                    "kind": "var",
+                                    "name": ""
+                                  }
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
                                   "const": "logic.var.set"
                                 },
                                 "id": {
@@ -5495,15 +6734,10 @@
                                   "type": "string"
                                 },
                                 "variableScope": {
-                                  "type": "string",
-                                  "enum": [
-                                    "local",
-                                    "shared",
-                                    "global"
-                                  ]
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables/items/properties/variableScope"
                                 },
                                 "value": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity"
                                 }
                               },
                               "required": [
@@ -5525,13 +6759,13 @@
                                   "type": "string"
                                 },
                                 "variableName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/116/properties/variableName"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/139/properties/variableName"
                                 },
                                 "variableScope": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/116/properties/variableScope"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/139/properties/variableScope"
                                 },
                                 "by": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1
@@ -5556,10 +6790,10 @@
                                   "type": "string"
                                 },
                                 "variableName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/116/properties/variableName"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/139/properties/variableName"
                                 },
                                 "variableScope": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/116/properties/variableScope"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/139/properties/variableScope"
                                 }
                               },
                               "required": [
@@ -5580,7 +6814,7 @@
                                   "type": "string"
                                 },
                                 "left": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity"
                                 },
                                 "op": {
                                   "type": "string",
@@ -5594,7 +6828,7 @@
                                   ]
                                 },
                                 "right": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity"
                                 }
                               },
                               "required": [
@@ -5620,7 +6854,7 @@
                                   "type": "string"
                                 },
                                 "value": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/19/properties/warn/properties/intensity"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/26/properties/warn/properties/intensity"
                                 },
                                 "cases": {
                                   "type": "array",
@@ -5646,26 +6880,61 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
+                                  "const": "logic.gate"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "op": {
+                                  "type": "string",
+                                  "enum": [
+                                    "and",
+                                    "or",
+                                    "nand",
+                                    "nor",
+                                    "xor",
+                                    "not"
+                                  ],
+                                  "default": "and"
+                                },
+                                "inputs": {
+                                  "type": "number",
+                                  "minimum": 2,
+                                  "maximum": 8,
+                                  "default": 2
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
                                   "const": "logic.minmax"
                                 },
                                 "id": {
                                   "type": "string"
                                 },
                                 "input": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "min": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "max": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "variableName": {
                                   "type": "string",
                                   "pattern": "^[a-z][a-z0-9_]*$"
                                 },
                                 "variableScope": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/116/properties/variableScope"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables/items/properties/variableScope"
                                 }
                               },
                               "required": [
@@ -5686,10 +6955,126 @@
                                   "type": "string"
                                 },
                                 "minMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
                                 },
                                 "maxMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/2/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.http.request"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "method": {
+                                  "type": "string",
+                                  "enum": [
+                                    "GET",
+                                    "POST",
+                                    "PUT",
+                                    "PATCH",
+                                    "DELETE",
+                                    "HEAD"
+                                  ],
+                                  "default": "GET"
+                                },
+                                "url": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "headers": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 64
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "maxLength": 128,
+                                        "default": ""
+                                      },
+                                      "value": {
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                      },
+                                      "secretId": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                      }
+                                    },
+                                    "required": [
+                                      "id"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "maxItems": 32,
+                                  "default": []
+                                },
+                                "query": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/147/properties/headers/items"
+                                  },
+                                  "maxItems": 32,
+                                  "default": []
+                                },
+                                "bodyMode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "none",
+                                    "json",
+                                    "text",
+                                    "form"
+                                  ],
+                                  "default": "none"
+                                },
+                                "body": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "timeoutMs": {
+                                  "type": "integer",
+                                  "minimum": 1000,
+                                  "maximum": 120000,
+                                  "default": 15000
+                                },
+                                "responseType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "auto",
+                                    "json",
+                                    "text"
+                                  ],
+                                  "default": "auto"
+                                },
+                                "allowLocalNetwork": {
+                                  "type": "boolean",
+                                  "default": false
+                                },
+                                "failOnHttpError": {
+                                  "type": "boolean",
+                                  "default": true
+                                },
+                                "validateResponse": {
+                                  "type": "boolean",
+                                  "default": true
+                                },
+                                "responseSchema": {
+                                  "type": "string",
+                                  "maxLength": 32768,
+                                  "default": ""
                                 }
                               },
                               "required": [
@@ -5732,6 +7117,242 @@
                                 "id"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "action.timeline.play"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "score": {
+                                  "type": "object",
+                                  "properties": {
+                                    "durationMs": {
+                                      "type": "integer",
+                                      "minimum": 100,
+                                      "maximum": 86400000
+                                    },
+                                    "loop": {
+                                      "type": "object",
+                                      "properties": {
+                                        "mode": {
+                                          "type": "string",
+                                          "enum": [
+                                            "once",
+                                            "forever",
+                                            "count",
+                                            "until"
+                                          ],
+                                          "default": "once"
+                                        },
+                                        "count": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 10000
+                                        },
+                                        "until": {
+                                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        }
+                                      },
+                                      "additionalProperties": false,
+                                      "default": {
+                                        "mode": "once"
+                                      }
+                                    },
+                                    "tracks": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "label": {
+                                            "type": "string",
+                                            "maxLength": 80,
+                                            "default": ""
+                                          },
+                                          "color": {
+                                            "type": "string",
+                                            "enum": [
+                                              "slate",
+                                              "sky",
+                                              "emerald",
+                                              "amber",
+                                              "rose",
+                                              "violet"
+                                            ],
+                                            "default": "slate"
+                                          },
+                                          "enabled": {
+                                            "anyOf": [
+                                              {
+                                                "type": "boolean"
+                                              },
+                                              {
+                                                "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                              }
+                                            ],
+                                            "default": true
+                                          },
+                                          "muted": {
+                                            "type": "boolean",
+                                            "default": false
+                                          },
+                                          "solo": {
+                                            "type": "boolean",
+                                            "default": false
+                                          },
+                                          "events": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "id": {
+                                                  "type": "string",
+                                                  "minLength": 1
+                                                },
+                                                "label": {
+                                                  "type": "string",
+                                                  "maxLength": 80,
+                                                  "default": ""
+                                                },
+                                                "enabled": {
+                                                  "type": "boolean",
+                                                  "default": true
+                                                },
+                                                "kind": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "point",
+                                                    "range"
+                                                  ],
+                                                  "default": "point"
+                                                },
+                                                "atMs": {
+                                                  "type": "integer",
+                                                  "minimum": 0
+                                                },
+                                                "durationMs": {
+                                                  "type": "integer",
+                                                  "minimum": 0
+                                                },
+                                                "mode": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "cadence",
+                                                    "edges",
+                                                    "start"
+                                                  ]
+                                                },
+                                                "everyMs": {
+                                                  "type": "integer",
+                                                  "minimum": 50
+                                                },
+                                                "easing": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "linear",
+                                                    "easeIn",
+                                                    "easeOut",
+                                                    "easeInOut",
+                                                    "step"
+                                                  ],
+                                                  "default": "linear"
+                                                },
+                                                "condition": {
+                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                                },
+                                                "jitterMs": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "default": 0
+                                                },
+                                                "onError": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "continue",
+                                                    "stopTrack",
+                                                    "stopAll"
+                                                  ],
+                                                  "default": "continue"
+                                                },
+                                                "action": {
+                                                  "anyOf": [
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "marker": {
+                                                          "type": "boolean",
+                                                          "const": true
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "marker"
+                                                      ],
+                                                      "additionalProperties": false
+                                                    },
+                                                    {
+                                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items"
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "id",
+                                                "atMs",
+                                                "action"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "default": []
+                                          }
+                                        },
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "default": []
+                                    }
+                                  },
+                                  "required": [
+                                    "durationMs"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "reentry": {
+                                  "type": "string",
+                                  "enum": [
+                                    "restart",
+                                    "ignore",
+                                    "queue",
+                                    "concurrent"
+                                  ],
+                                  "default": "restart"
+                                },
+                                "holdWhile": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "rate": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                },
+                                "transportId": {
+                                  "type": "string",
+                                  "maxLength": 80
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "id",
+                                "score"
+                              ],
+                              "additionalProperties": false
                             }
                           ]
                         },
@@ -5755,6 +7376,9 @@
                             },
                             "debugLabel": {
                               "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/debugLabel"
+                            },
+                            "saveToVariables": {
+                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables"
                             }
                           }
                         }
@@ -5787,6 +7411,9 @@
                         },
                         "debugLabel": {
                           "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/debugLabel"
+                        },
+                        "saveToVariables": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables"
                         }
                       },
                       "required": [
@@ -5954,6 +7581,45 @@
                         "type",
                         "min",
                         "max"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/variables/items/anyOf/0/properties/name"
+                        },
+                        "label": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/variables/items/anyOf/0/properties/label"
+                        },
+                        "shared": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/variables/items/anyOf/0/properties/shared"
+                        },
+                        "sharedId": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/variables/items/anyOf/0/properties/sharedId"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "object"
+                        },
+                        "default": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": {}
+                            },
+                            {
+                              "type": "array",
+                              "items": {}
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type",
+                        "default"
                       ],
                       "additionalProperties": false
                     }

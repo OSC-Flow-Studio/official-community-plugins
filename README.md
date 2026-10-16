@@ -7,6 +7,7 @@ in the Studio; you install only the ones you want, and each one updates on its o
 | Plugin | Folder | Package id | Studio |
 | --- | --- | --- | --- |
 | LivePix | [plugins/livepix](plugins/livepix) | `io.github.osc-flow-studio.livepix` | `>=0.5.4 <0.6.0` |
+| Giggle Puck | [plugins/giggle-puck](plugins/giggle-puck) | `io.github.osc-flow-studio.giggle-puck` | `>=0.5.10 <0.6.0` |
 
 ## Install a plugin
 
@@ -23,6 +24,9 @@ in the Studio; you install only the ones you want, and each one updates on its o
 
 New versions arrive through the same source. An update to a plugin that is running is
 prepared and applied when you restart the backend from the Studio.
+
+Giggle Puck replaces the GiggleTech router. Do not run both: they listen on the same OSC
+port, and only one of them receives from VRChat.
 
 ## Repository layout
 

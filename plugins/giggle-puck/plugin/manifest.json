@@ -1,0 +1,393 @@
+{
+  "$schema": "../../../sdk/community-plugin-manifest.schema.json",
+  "id": "giggle-puck",
+  "name": "Giggle Puck",
+  "version": "0.1.0",
+  "packageId": "io.github.osc-flow-studio.giggle-puck",
+  "engines": {
+    "oscFlowStudio": ">=0.5.10 <0.6.0"
+  },
+  "author": {
+    "name": "OSC Flow Studio",
+    "url": "https://github.com/OSC-Flow-Studio"
+  },
+  "repository": "https://github.com/OSC-Flow-Studio/official-community-plugins",
+  "homepage": "https://github.com/OSC-Flow-Studio/official-community-plugins/tree/main/plugins/giggle-puck#readme",
+  "changelogUrl": "https://github.com/OSC-Flow-Studio/official-community-plugins/blob/main/plugins/giggle-puck/CHANGELOG.md",
+  "description": "Drives GiggleTech Giggle Puck motors from your avatar's contacts and finds the Pucks on your network, without the GiggleTech router.",
+  "capabilities": ["triggers", "actions", "templates", "haptics", "local-network"],
+  "appearance": { "icon": "vibrate", "accent": "fuchsia" },
+  "entry": "index.mjs",
+  "apiVersion": 1,
+  "configSchema": {
+    "tabs": [
+      { "id": "general", "label": "General", "description": "Switch, discovery and how often to look for Pucks." },
+      { "id": "devices", "label": "Devices", "description": "Pucks to use by address, for networks where discovery cannot see them." },
+      { "id": "motor", "label": "Motor", "description": "Speed limits, the start pulse and when to stop." }
+    ],
+    "fields": [
+      {
+        "key": "enabled",
+        "type": "boolean",
+        "label": "Plugin enabled",
+        "description": "Looks for Pucks and keeps them under control while OSC Flow Studio is open.",
+        "default": true,
+        "tab": "general"
+      },
+      {
+        "key": "discovery",
+        "type": "boolean",
+        "label": "Find Pucks on the network",
+        "description": "Looks for Pucks with multicast DNS, the way the GiggleTech router does. Turn it off to use only the Pucks under Devices.",
+        "default": true,
+        "tab": "general"
+      },
+      {
+        "key": "rescanSeconds",
+        "type": "number",
+        "label": "Look again every (seconds)",
+        "description": "A Puck that misses two searches in a row is shown as offline.",
+        "default": 30,
+        "min": 10,
+        "max": 600,
+        "tab": "general"
+      },
+      {
+        "key": "devicesSection",
+        "type": "separator",
+        "label": "Pucks by address",
+        "description": "Add a Puck here when discovery cannot see it, for example on another subnet. The Puck listens on OSC port 8888.",
+        "tab": "devices"
+      },
+      {
+        "key": "devices",
+        "type": "table",
+        "label": "Pucks",
+        "maxItems": 16,
+        "default": [],
+        "tab": "devices",
+        "itemFields": [
+          { "key": "name", "type": "string", "label": "Name", "required": true, "unique": true },
+          {
+            "key": "host",
+            "type": "string",
+            "label": "IP address or .local name",
+            "required": true,
+            "unique": true,
+            "pattern": "^(?:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$|^[A-Za-z0-9][A-Za-z0-9-]{0,62}(?:\\.[A-Za-z0-9-]{1,63})*\\.local$"
+          },
+          { "key": "port", "type": "number", "label": "OSC port", "default": 8888, "min": 1, "max": 65535 },
+          { "key": "enabled", "type": "boolean", "label": "Use this Puck", "default": true }
+        ]
+      },
+      {
+        "key": "maxSpeedPercent",
+        "type": "number",
+        "label": "Maximum speed (%)",
+        "description": "Speed at full contact until the avatar sends max_speed. A 66 % motor protection scale is always applied on top.",
+        "default": 25,
+        "min": 5,
+        "max": 100,
+        "tab": "motor"
+      },
+      {
+        "key": "maxSpeedCeilingPercent",
+        "type": "number",
+        "label": "Highest speed the avatar may ask for (%)",
+        "description": "Caps max_speed from the avatar and the maximum speed above.",
+        "default": 100,
+        "min": 5,
+        "max": 100,
+        "tab": "motor"
+      },
+      {
+        "key": "speedScalePercent",
+        "type": "number",
+        "label": "Intensity scale (%)",
+        "description": "Scales every value sent to the Puck.",
+        "default": 100,
+        "min": 10,
+        "max": 100,
+        "tab": "motor"
+      },
+      {
+        "key": "startTx",
+        "type": "number",
+        "label": "Start pulse (0 to 255)",
+        "description": "Raw value sent on the first touch so the motor spins up. Never above the current maximum.",
+        "default": 20,
+        "min": 0,
+        "max": 255,
+        "tab": "motor"
+      },
+      {
+        "key": "outerProximity",
+        "type": "number",
+        "label": "Outer proximity",
+        "description": "Contact closer than this starts the motor (0 to 1).",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "tab": "motor"
+      },
+      {
+        "key": "innerProximity",
+        "type": "number",
+        "label": "Inner proximity",
+        "description": "Contact at this depth or closer runs at the maximum speed (0 to 1). Must be above the outer proximity.",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "tab": "motor"
+      },
+      {
+        "key": "inputTimeoutSeconds",
+        "type": "number",
+        "label": "Stop after silence (seconds)",
+        "description": "With no proximity from the avatar for this long, the Puck is set to 0 and kept at 0. VRChat only sends a contact when it moves, so a contact held perfectly still also stops.",
+        "default": 5,
+        "min": 1,
+        "max": 60,
+        "tab": "motor"
+      },
+      {
+        "key": "minSendIntervalMs",
+        "type": "number",
+        "label": "Minimum time between updates (ms)",
+        "description": "Faster changes are merged and the newest value is sent. A stop is always sent at once.",
+        "default": 20,
+        "min": 0,
+        "max": 500,
+        "tab": "motor"
+      }
+    ]
+  },
+  "nodeTypes": [
+    {
+      "type": "trigger.x.giggle-puck.device-status",
+      "label": "Giggle Puck: online or offline",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Runs when a Puck is found on the network or stops answering.",
+      "role": "trigger",
+      "appearance": { "icon": "radio-tower" },
+      "matchFields": [{ "nodeField": "change", "eventField": "change", "mode": "equals" }],
+      "fields": [
+        {
+          "key": "change",
+          "label": "When",
+          "kind": "select",
+          "options": [
+            { "value": "", "label": "A Puck comes online or goes offline" },
+            { "value": "online", "label": "A Puck comes online" },
+            { "value": "offline", "label": "A Puck goes offline" }
+          ]
+        }
+      ],
+      "defaultData": { "change": "online" },
+      "outputSchema": [
+        { "path": "metadata.change", "type": "string", "description": "online or offline." },
+        { "path": "metadata.deviceId", "type": "string", "description": "The value the Puck fields of the other blocks use." },
+        { "path": "metadata.name", "type": "string" },
+        { "path": "metadata.address", "type": "string", "description": "The Puck's IPv4 address." },
+        { "path": "metadata.source", "type": "string", "description": "How it was found: unicast, multicast, resolver or manual." },
+        { "path": "metadata.onlineCount", "type": "number", "description": "Pucks online after this change." },
+        { "path": "actorDisplayName", "type": "string", "description": "The Puck's name." }
+      ]
+    },
+    {
+      "type": "action.x.giggle-puck.set-proximity",
+      "label": "Giggle Puck: set proximity",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Turns a Contact Receiver proximity (0 to 1) into motor speed. 0 stops the motor.",
+      "role": "action",
+      "appearance": { "icon": "hand" },
+      "fields": [
+        { "key": "device", "label": "Puck", "kind": "resource-select", "resourceKey": "devices", "helpText": "All Pucks sends to every Puck that is online." },
+        { "key": "proximity", "label": "Proximity", "kind": "number", "min": 0, "max": 1, "step": 0.01, "helpText": "Keep the formula that reads the OSC trigger." }
+      ],
+      "defaultData": {
+        "device": "all",
+        "proximity": { "mode": "expression", "expression": "{{ $trigger.metadata.receivedValue }}" }
+      },
+      "outputSchema": [
+        { "path": "ok", "type": "boolean", "description": "False when no Puck received it or the proximity was not a number." },
+        { "path": "tx", "type": "number", "description": "Motor value sent, 0 to 255." },
+        { "path": "devices", "type": "number", "description": "Pucks it was sent to." },
+        { "path": "error", "type": "string" }
+      ]
+    },
+    {
+      "type": "action.x.giggle-puck.set-max-speed",
+      "label": "Giggle Puck: set maximum speed",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Changes the speed at full contact, from an avatar parameter or a fixed value.",
+      "role": "action",
+      "appearance": { "icon": "gauge" },
+      "fields": [
+        { "key": "device", "label": "Puck", "kind": "resource-select", "resourceKey": "devices", "helpText": "All Pucks also becomes the default for Pucks found later." },
+        { "key": "maxSpeed", "label": "Maximum speed (0 to 1)", "kind": "number", "min": 0, "max": 1, "step": 0.01, "helpText": "Kept between 5 % and the highest speed set in the plugin." }
+      ],
+      "defaultData": {
+        "device": "all",
+        "maxSpeed": { "mode": "expression", "expression": "{{ $trigger.metadata.receivedValue }}" }
+      },
+      "outputSchema": [
+        { "path": "ok", "type": "boolean" },
+        { "path": "maxSpeedPercent", "type": "number", "description": "The maximum speed now in use." },
+        { "path": "clamped", "type": "boolean", "description": "True when the value was outside the allowed range." },
+        { "path": "devices", "type": "number" },
+        { "path": "error", "type": "string" }
+      ]
+    },
+    {
+      "type": "action.x.giggle-puck.vibrate",
+      "label": "Giggle Puck: vibrate",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Buzzes for a while on top of any contact, then goes back to what the contact asks for.",
+      "role": "action",
+      "appearance": { "icon": "vibrate" },
+      "fields": [
+        { "key": "device", "label": "Puck", "kind": "resource-select", "resourceKey": "devices" },
+        { "key": "intensity", "label": "Intensity (% of the maximum speed)", "kind": "number", "min": 0, "max": 100 },
+        { "key": "durationMs", "label": "Duration", "kind": "number", "min": 50, "max": 10000, "durationBaseUnit": "ms" }
+      ],
+      "defaultData": { "device": "all", "intensity": 50, "durationMs": 500 },
+      "outputSchema": [
+        { "path": "ok", "type": "boolean" },
+        { "path": "tx", "type": "number", "description": "Motor value of the buzz, 0 to 255." },
+        { "path": "durationMs", "type": "number", "description": "How long it lasts, in milliseconds." },
+        { "path": "devices", "type": "number" },
+        { "path": "error", "type": "string" }
+      ]
+    },
+    {
+      "type": "action.x.giggle-puck.stop",
+      "label": "Giggle Puck: stop",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Sets the motor to 0 and ends any buzz. The next proximity starts it again.",
+      "role": "action",
+      "appearance": { "icon": "circle-stop" },
+      "fields": [
+        { "key": "device", "label": "Puck", "kind": "resource-select", "resourceKey": "devices", "helpText": "All Pucks reaches every known Puck, online or not." }
+      ],
+      "defaultData": { "device": "all" },
+      "outputSchema": [
+        { "path": "ok", "type": "boolean" },
+        { "path": "devices", "type": "number" },
+        { "path": "error", "type": "string" }
+      ]
+    },
+    {
+      "type": "action.x.giggle-puck.get-status",
+      "label": "Giggle Puck: read status",
+      "category": "GiggleTech",
+      "subcategory": "Giggle Puck",
+      "description": "Reads how many Pucks are online and what the motors last received.",
+      "role": "input",
+      "appearance": { "icon": "activity" },
+      "outputSchema": [
+        { "path": "onlineCount", "type": "number" },
+        { "path": "knownCount", "type": "number", "description": "Pucks found or added, online or not." },
+        { "path": "names", "type": "string", "description": "Names of the Pucks online, separated by commas." },
+        { "path": "discovery", "type": "string", "description": "How Pucks were found (unicast, multicast, resolver), searching, nothing found, or off." },
+        { "path": "maxSpeedPercent", "type": "number" },
+        { "path": "lastTx", "type": "number", "description": "Highest motor value last sent to any Puck." },
+        { "path": "lastInputAt", "type": "string", "description": "When the avatar last sent a proximity, ISO 8601, or empty." },
+        { "path": "error", "type": "string", "description": "The last network error, or empty." }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "giggle-puck-contact",
+      "name": "Giggle Puck: avatar contact to vibration",
+      "description": "Reads proximity_01 and max_speed from your avatar and tells it when a Puck comes online through GigglePuck_online. It arrives switched off; turn the flow on after importing it.",
+      "flow": {
+        "schemaVersion": 1,
+        "id": "tpl-giggle-puck-contact",
+        "name": "Giggle Puck: avatar contact",
+        "enabled": false,
+        "nodes": [
+          {
+            "type": "trigger.osc",
+            "id": "gp-proximity",
+            "executionMode": "single",
+            "keys": [
+              {
+                "id": "key-proximity",
+                "address": { "mode": "fixed", "value": "/avatar/parameters/proximity_01" },
+                "matchMode": "exact",
+                "oscType": "float",
+                "valueComparison": "any",
+                "description": "Contact Receiver proximity"
+              }
+            ]
+          },
+          {
+            "type": "action.x.giggle-puck.set-proximity",
+            "id": "gp-set-proximity",
+            "device": "all",
+            "proximity": { "mode": "expression", "expression": "{{ $trigger.metadata.receivedValue }}" }
+          },
+          {
+            "type": "trigger.osc",
+            "id": "gp-max-speed",
+            "executionMode": "single",
+            "keys": [
+              {
+                "id": "key-max-speed",
+                "address": { "mode": "fixed", "value": "/avatar/parameters/max_speed" },
+                "matchMode": "exact",
+                "oscType": "float",
+                "valueComparison": "any",
+                "description": "Avatar speed limit"
+              }
+            ]
+          },
+          {
+            "type": "action.x.giggle-puck.set-max-speed",
+            "id": "gp-set-max-speed",
+            "device": "all",
+            "maxSpeed": { "mode": "expression", "expression": "{{ $trigger.metadata.receivedValue }}" }
+          },
+          { "type": "trigger.x.giggle-puck.device-status", "id": "gp-online", "change": "online" },
+          {
+            "type": "action.osc.send",
+            "id": "gp-online-false",
+            "address": { "mode": "fixed", "value": "/avatar/parameters/GigglePuck_online" },
+            "args": [{ "type": "bool", "value": { "mode": "fixed", "value": false } }]
+          },
+          { "type": "logic.delay", "id": "gp-online-wait", "ms": { "mode": "fixed", "value": 250 } },
+          {
+            "type": "action.osc.send",
+            "id": "gp-online-true",
+            "address": { "mode": "fixed", "value": "/avatar/parameters/GigglePuck_online" },
+            "args": [{ "type": "bool", "value": { "mode": "fixed", "value": true } }]
+          }
+        ],
+        "edges": [
+          { "id": "e-proximity", "source": "gp-proximity", "target": "gp-set-proximity" },
+          { "id": "e-max-speed", "source": "gp-max-speed", "target": "gp-set-max-speed" },
+          { "id": "e-online-1", "source": "gp-online", "target": "gp-online-false" },
+          { "id": "e-online-2", "source": "gp-online-false", "target": "gp-online-wait" },
+          { "id": "e-online-3", "source": "gp-online-wait", "target": "gp-online-true" }
+        ],
+        "layout": {
+          "gp-proximity": { "x": 0, "y": 0 },
+          "gp-set-proximity": { "x": 380, "y": 0 },
+          "gp-max-speed": { "x": 0, "y": 220 },
+          "gp-set-max-speed": { "x": 380, "y": 220 },
+          "gp-online": { "x": 0, "y": 440 },
+          "gp-online-false": { "x": 380, "y": 440 },
+          "gp-online-wait": { "x": 760, "y": 440 },
+          "gp-online-true": { "x": 1140, "y": 440 }
+        }
+      }
+    }
+  ]
+}

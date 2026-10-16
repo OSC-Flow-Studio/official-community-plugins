@@ -25,6 +25,28 @@ export const LIMITS = {
   maxManifestBytes: 256 * 1024,
 };
 
+// Copies of the app's appearance lists (packages/core/src/plugin-appearance.ts), kept here
+// so this tool has no dependencies. A test in the app fails when they drift apart.
+const PLUGIN_ICON_NAMES = [
+  "puzzle", "box", "package", "plug", "cable", "cpu", "bot", "sparkles", "star", "heart",
+  "heart-pulse", "hand", "hand-heart", "flame", "droplet", "lightbulb", "rocket", "gift",
+  "trophy", "target", "crosshair", "layers", "database", "calendar", "clock", "timer",
+  "bell", "bell-ring", "eye", "user", "users", "globe", "webhook", "send",
+  "message-square", "mic", "music", "audio-waveform", "speaker", "camera", "tv", "monitor",
+  "smartphone", "gamepad-2", "joystick", "radio", "radio-tower", "wifi", "bluetooth",
+  "signal", "satellite", "radar", "activity", "waves", "vibrate", "gauge", "thermometer",
+  "coins", "badge-dollar-sign", "power", "circle-stop", "scan-line",
+];
+const PLUGIN_ACCENT_TOKENS = [
+  "orange", "amber", "lime", "green", "teal", "cyan", "sky", "blue", "indigo", "violet",
+  "fuchsia", "pink", "slate",
+];
+
+/** The icon names and accent tokens a manifest may use in `appearance`. */
+export function appearanceValues() {
+  return { icons: [...PLUGIN_ICON_NAMES], accents: [...PLUGIN_ACCENT_TOKENS] };
+}
+
 const PACKAGE_ID = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*){2,}$/;
 const PLUGIN_ID = /^[a-z0-9][a-z0-9-]{1,40}$/;
 const SEMVER =
@@ -108,10 +130,38 @@ export function validatePluginDir(dir) {
   if (!fields.some((field) => field.key === "enabled" && field.type === "boolean")) {
     issues.push("configSchema must declare a boolean field keyed enabled");
   }
+  if ((manifest.capabilities ?? []).includes("safety-notice")) {
+    issues.push("the safety-notice capability is reserved for the app's own shock integrations");
+  }
+  const appearance = manifest.appearance;
+  if (appearance !== undefined) {
+    if (typeof appearance !== "object" || appearance === null || Array.isArray(appearance)) {
+      issues.push("appearance must be an object with icon and accent");
+    } else {
+      for (const key of Object.keys(appearance)) {
+        if (key !== "icon" && key !== "accent") issues.push(`appearance.${key} is not a known property`);
+      }
+      if (appearance.icon !== undefined && !PLUGIN_ICON_NAMES.includes(appearance.icon)) {
+        issues.push(`appearance.icon "${appearance.icon}" is not an icon the app offers`);
+      }
+      if (appearance.accent !== undefined && !PLUGIN_ACCENT_TOKENS.includes(appearance.accent)) {
+        issues.push(`appearance.accent "${appearance.accent}" must be one of ${PLUGIN_ACCENT_TOKENS.join(", ")}`);
+      }
+    }
+  }
   for (const node of manifest.nodeTypes ?? []) {
     const pattern = new RegExp(`^(trigger|action)\\.x\\.${manifest.id}\\.[A-Za-z0-9_-]+$`);
     if (!pattern.test(String(node.type))) {
       issues.push(`node type "${node.type}" must be trigger.x.${manifest.id}.<name> or action.x.${manifest.id}.<name>`);
+    }
+    if (node.appearance !== undefined) {
+      const keys = typeof node.appearance === "object" && node.appearance !== null ? Object.keys(node.appearance) : ["?"];
+      if (keys.some((key) => key !== "icon")) {
+        issues.push(`node type "${node.type}": appearance takes only icon; the accent comes from the plugin`);
+      }
+      if (node.appearance?.icon !== undefined && !PLUGIN_ICON_NAMES.includes(node.appearance.icon)) {
+        issues.push(`node type "${node.type}": appearance.icon "${node.appearance.icon}" is not an icon the app offers`);
+      }
     }
   }
   const files = walk(dir);
