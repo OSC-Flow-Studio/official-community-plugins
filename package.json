@@ -13,7 +13,8 @@
     "check": "npm run validate && npm test",
     "prepackage": "npm run check",
     "package": "node scripts/package.mjs",
-    "catalog": "node scripts/build-catalog.mjs"
+    "catalog": "node scripts/build-catalog.mjs",
+    "release": "node scripts/release-plugin.mjs"
   },
   "devDependencies": { "ajv": "8.17.1", "ajv-formats": "3.0.1", "ws": "8.21.3" }
 }

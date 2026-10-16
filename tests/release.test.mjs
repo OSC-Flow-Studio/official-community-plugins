@@ -34,7 +34,8 @@ test("the first release assembles every asset in a draft before making the catal
   assert.ok(calls[1].includes("--verify-tag"));
   assert.equal(calls[1][calls[1].indexOf("--title") + 1], `LivePix ${manifest.version}`);
   const notes = readFileSync(calls[1][calls[1].indexOf("--notes-file") + 1], "utf8");
-  assert.match(notes, /official-community-plugins/);
+  const changelog = readFileSync(new URL("../plugins/livepix/CHANGELOG.md", import.meta.url), "utf8");
+  assert.equal(notes, releaseNotes(changelog, manifest.version));
   assert.doesNotMatch(notes, /^## /m);
   assert.ok(calls[2].includes("--draft=false"));
   assert.ok(calls[2].includes("--latest"));

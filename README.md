@@ -67,15 +67,33 @@ public so the Studio can download the catalog and the ZIPs, and GitHub Actions m
 enabled. The release workflow uses `GITHUB_TOKEN` with `contents: write` and no other
 secret.
 
-1. Bump `version` in `plugins/<id>/plugin/manifest.json` and add a `## <version>`
-   section to `plugins/<id>/CHANGELOG.md`. Its text becomes the release notes.
-2. Push to `main` and wait for **Validate plugins** to pass on Windows and Linux.
-3. Tag and push. The tag is the plugin id, `-v`, and the version:
+Each plugin has its own version, in `version` of `plugins/<id>/plugin/manifest.json`, and
+is released by a tag made of its id, `-v`, and that version (`livepix-v2.0.1`). A
+repository tag such as `v0.0.1` publishes nothing.
 
-   ```powershell
-   git tag livepix-v2.0.1
-   git push origin livepix-v2.0.1
-   ```
+From a clean working tree on the branch you release from, run:
+
+```powershell
+npm run release
+```
+
+It lists the plugins with their manifest and last published versions, asks which plugin
+and which version (the current manifest version when it was never published, the next
+patch, minor or major, or one you type), and asks for the changelog lines when
+`CHANGELOG.md` has no section for that version. Then it sets the manifest version, adds
+the section, runs `npm run check`, shows the git commands and, once you confirm, commits
+`🧹 Chore: Release <name> <version>`, creates the annotated tag and pushes the branch and
+the tag together. A failed check, a cancel or closed input restores both files.
+`npm run release -- --dry-run` does everything except the git commands.
+
+To release by hand instead: set the version, add a `## <version>` section to the
+plugin's `CHANGELOG.md` (its text becomes the release notes), push, wait for **Validate
+plugins**, then push the tag:
+
+```powershell
+git tag -a livepix-v2.0.2 -m "LivePix 2.0.2"
+git push origin livepix-v2.0.2
+```
 
 **Release a community plugin** validates again, packs that one plugin, downloads
 `listing.json` from the latest release (whichever plugin published it), adds the new
