@@ -1,0 +1,25 @@
+name: Release a community plugin
+on:
+  push:
+    tags: ['*-v*']
+permissions:
+  contents: write
+# Every release rewrites the shared catalog, so releases of different plugins never overlap.
+concurrency:
+  group: community-catalog-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Publish the ZIP, its SHA-256 and the catalog together
+        run: node scripts/release.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}

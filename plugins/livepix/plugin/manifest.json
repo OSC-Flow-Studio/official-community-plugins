@@ -1,0 +1,404 @@
+{
+  "$schema": "../../../sdk/community-plugin-manifest.schema.json",
+  "id": "livepix",
+  "name": "LivePix",
+  "version": "2.0.1",
+  "packageId": "io.github.osc-flow-studio.livepix",
+  "engines": {
+    "oscFlowStudio": ">=0.5.4 <0.6.0"
+  },
+  "author": {
+    "name": "OSC Flow Studio",
+    "url": "https://github.com/OSC-Flow-Studio"
+  },
+  "repository": "https://github.com/OSC-Flow-Studio/official-community-plugins",
+  "homepage": "https://github.com/OSC-Flow-Studio/official-community-plugins/tree/main/plugins/livepix#readme",
+  "changelogUrl": "https://github.com/OSC-Flow-Studio/official-community-plugins/blob/main/plugins/livepix/CHANGELOG.md",
+  "description": "Dispara flows a cada doação recebida no LivePix, entregue em tempo real pelo OSC LivePix Dashboard.",
+  "capabilities": [
+    "triggers",
+    "actions",
+    "secrets"
+  ],
+  "entry": "index.mjs",
+  "apiVersion": 1,
+  "configSchema": {
+    "tabs": [
+      {
+        "id": "general",
+        "label": "Geral",
+        "description": "Ativação, moeda e intervalo de consulta."
+      },
+      {
+        "id": "connection",
+        "label": "Conexão",
+        "description": "Endereço e token do OSC LivePix Dashboard."
+      },
+      {
+        "id": "subathon",
+        "label": "Subathon",
+        "description": "A partir de quando as doações contam."
+      }
+    ],
+    "fields": [
+      {
+        "key": "enabled",
+        "type": "boolean",
+        "label": "Plugin ativado",
+        "description": "Mantém a conexão com o OSC LivePix Dashboard enquanto o OSC Flow Studio estiver aberto.",
+        "default": true,
+        "tab": "general"
+      },
+      {
+        "key": "pollSeconds",
+        "type": "number",
+        "label": "Intervalo de consulta (segundos)",
+        "description": "Usado quando o WebSocket cai: a API é consultada neste intervalo até a conexão voltar. Com o WebSocket ativo, as doações chegam na hora.",
+        "default": 10,
+        "min": 2,
+        "max": 300,
+        "tab": "general"
+      },
+      {
+        "key": "currency",
+        "type": "string",
+        "label": "Moeda",
+        "description": "Código ISO da moeda aceita. Doações em outra moeda são ignoradas.",
+        "default": "BRL",
+        "pattern": "^[A-Z]{3,10}$",
+        "tab": "general"
+      },
+      {
+        "key": "connectionSection",
+        "type": "separator",
+        "label": "OSC LivePix Dashboard",
+        "description": "Crie um webhook no dashboard, gere o token na tela de edição dele e cole aqui.",
+        "tab": "connection"
+      },
+      {
+        "key": "baseUrl",
+        "type": "string",
+        "label": "URL base da API",
+        "description": "Endereço do OSC LivePix Dashboard. Mude só se você hospeda o seu próprio.",
+        "default": "https://livepix.maned.club",
+        "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+        "tab": "connection"
+      },
+      {
+        "key": "apiToken",
+        "type": "secret",
+        "label": "Token da API",
+        "description": "Token gerado no OSC LivePix Dashboard (começa com olp_). Guardado no cofre criptografado do Studio.",
+        "tab": "connection"
+      },
+      {
+        "key": "startAt",
+        "type": "datetime",
+        "label": "Início do subathon",
+        "description": "Horário local. Ao ativar, busca as doações desde esse momento sem repetir os IDs já processados. Vazio conta a partir da primeira ativação.",
+        "default": "",
+        "tab": "subathon"
+      }
+    ]
+  },
+  "nodeTypes": [
+    {
+      "type": "trigger.x.livepix.donation",
+      "label": "LivePix: doação recebida",
+      "category": "LivePix",
+      "description": "Recebe doações desde o início do subathon e reenvios solicitados no dashboard. Reenvios mantêm a mesma chave única para o Subathon evitar contagem duplicada.",
+      "role": "trigger",
+      "matchFields": [
+        {
+          "nodeField": "minAmountCents",
+          "eventField": "amount",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "maxAmountCents",
+          "eventField": "amount",
+          "mode": "lte"
+        },
+        {
+          "nodeField": "textContains",
+          "eventField": "message",
+          "mode": "contains"
+        },
+        {
+          "nodeField": "requireMessage",
+          "eventField": "hasMessage",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minAmountCents",
+          "label": "Valor mínimo (centavos)",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Vazio ou 0 aceita qualquer valor. R$ 5 = 500."
+        },
+        {
+          "key": "maxAmountCents",
+          "label": "Valor máximo (centavos)",
+          "kind": "number",
+          "min": 0,
+          "optional": true,
+          "helpText": "Vazio aceita qualquer valor. Útil para separar faixas de doação."
+        },
+        {
+          "key": "textContains",
+          "label": "Mensagem contém",
+          "kind": "plain-text",
+          "placeholder": "!meta",
+          "helpText": "Vazio aceita qualquer doação. Sem diferença entre maiúsculas e minúsculas."
+        },
+        {
+          "key": "requireMessage",
+          "label": "Mensagem do apoiador",
+          "kind": "select",
+          "helpText": "Filtra por doações que vieram com texto escrito pelo apoiador.",
+          "options": [
+            {
+              "value": "",
+              "label": "Tanto faz"
+            },
+            {
+              "value": "true",
+              "label": "Somente com mensagem"
+            },
+            {
+              "value": "false",
+              "label": "Somente sem mensagem"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "minAmountCents": 0,
+        "textContains": "",
+        "requireMessage": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.amount",
+          "type": "number",
+          "description": "Valor em centavos. Use direto no bloco registrar Donate."
+        },
+        {
+          "path": "metadata.amountFormatted",
+          "type": "string",
+          "description": "Valor formatado na moeda, por exemplo R$ 5,00."
+        },
+        {
+          "path": "metadata.currency",
+          "type": "string",
+          "description": "Código da moeda."
+        },
+        {
+          "path": "metadata.username",
+          "type": "string",
+          "description": "Nome do apoiador, vazio quando a doação não trouxe mensagem."
+        },
+        {
+          "path": "metadata.message",
+          "type": "string",
+          "description": "Texto escrito pelo apoiador, vazio quando não houver."
+        },
+        {
+          "path": "metadata.hasMessage",
+          "type": "boolean",
+          "description": "Verdadeiro quando a doação trouxe texto."
+        },
+        {
+          "path": "metadata.flagged",
+          "type": "boolean",
+          "description": "Mensagem marcada pela moderação automática do LivePix."
+        },
+        {
+          "path": "metadata.id",
+          "type": "string",
+          "description": "ID do pagamento no LivePix."
+        },
+        {
+          "path": "metadata.proof",
+          "type": "string",
+          "description": "Comprovante externo (código Pix)."
+        },
+        {
+          "path": "metadata.reference",
+          "type": "string",
+          "description": "Referência interna do LivePix."
+        },
+        {
+          "path": "metadata.createdAt",
+          "type": "string",
+          "description": "Horário ISO da doação."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Chave única pronta para deduplicação em outros plugins."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "Nome do apoiador, ou vazio."
+        }
+      ]
+    },
+    {
+      "type": "action.x.livepix.poll-now",
+      "label": "LivePix: sincronizar agora",
+      "category": "LivePix",
+      "description": "Lê no OSC LivePix Dashboard todas as doações desde o início do subathon e dispara as que ainda não foram processadas.",
+      "role": "action",
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "Falso quando a consulta falhou."
+        },
+        {
+          "path": "fetched",
+          "type": "number",
+          "description": "Doações lidas do dashboard."
+        },
+        {
+          "path": "emitted",
+          "type": "number",
+          "description": "Gatilhos disparados."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Mensagem de erro, quando houver."
+        }
+      ]
+    },
+    {
+      "type": "action.x.livepix.recover",
+      "label": "LivePix: recuperar doações",
+      "category": "LivePix",
+      "description": "Reenvia o histórico salvo no dashboard desde o início do subathon, inclusive doações cujo fluxo falhou. Use a chave única no Registrar Donate para não contar duas vezes. Execute manualmente após corrigir o fluxo.",
+      "role": "action",
+      "outputSchema": [
+        { "path": "ok", "type": "boolean", "description": "Indica que a leitura e o reenvio terminaram. Não confirma contabilização." },
+        { "path": "fetched", "type": "number", "description": "Doações lidas do dashboard." },
+        { "path": "emitted", "type": "number", "description": "Gatilhos reenviados." },
+        { "path": "error", "type": "string", "description": "Erro de leitura ou reenvio, se houver." }
+      ]
+    },
+    {
+      "type": "action.x.livepix.confirm-accounted",
+      "label": "LivePix: confirmar contabilização",
+      "category": "LivePix",
+      "description": "Confirma ao dashboard que Registrar Donate aceitou a doação ou reconheceu sua chave como já contabilizada. Conecte depois desse bloco.",
+      "role": "action",
+      "fields": [
+        { "key": "eventKey", "label": "Chave da doação", "kind": "text", "helpText": "Use $trigger.metadata.eventKey, sem alterar a chave." },
+        { "key": "accounted", "label": "Contabilização confirmada", "kind": "boolean", "helpText": "Use a fórmula $json.accepted || $json.duplicate do Registrar Donate." }
+      ],
+      "defaultData": {
+        "eventKey": { "mode": "expression", "expression": "{{ $trigger.metadata.eventKey }}" },
+        "accounted": { "mode": "expression", "expression": "{{ $json.accepted || $json.duplicate }}" }
+      },
+      "outputSchema": [
+        { "path": "ok", "type": "boolean", "description": "Confirmação gravada no dashboard." },
+        { "path": "error", "type": "string", "description": "Erro ao gravar a confirmação, se houver." }
+      ]
+    },
+    {
+      "type": "action.x.livepix.status",
+      "label": "LivePix: ler status",
+      "category": "LivePix",
+      "description": "Retorna como as doações estão chegando (WebSocket ou consulta), a última sincronização e os totais.",
+      "role": "input",
+      "outputSchema": [
+        {
+          "path": "connected",
+          "type": "boolean",
+          "description": "Verdadeiro quando o WebSocket está aberto ou a última consulta deu certo."
+        },
+        {
+          "path": "transport",
+          "type": "string",
+          "description": "websocket, polling ou offline."
+        },
+        {
+          "path": "lastPollAt",
+          "type": "string",
+          "description": "Horário ISO da última sincronização pela API."
+        },
+        {
+          "path": "lastError",
+          "type": "string",
+          "description": "Último erro registrado."
+        },
+        {
+          "path": "seen",
+          "type": "number",
+          "description": "IDs guardados pelo plugin, inclusive de ativações anteriores. Não confirma contabilização no subathon."
+        },
+        {
+          "path": "emittedSinceStart",
+          "type": "number",
+          "description": "Gatilhos disparados desde a ativação."
+        },
+        {
+          "path": "startAt",
+          "type": "string",
+          "description": "Início do subathon em vigor, em ISO."
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "livepix-log",
+      "name": "LivePix: registrar cada doação no console",
+      "description": "Um ponto de partida para conferir se o token funciona antes de ligar as doações a outras integrações.",
+      "flow": {
+        "schemaVersion": 1,
+        "id": "tpl-livepix-log",
+        "name": "LivePix: doações no console",
+        "enabled": false,
+        "nodes": [
+          {
+            "type": "trigger.x.livepix.donation",
+            "id": "livepix-donation",
+            "minAmountCents": 0,
+            "textContains": "",
+            "requireMessage": ""
+          },
+          {
+            "type": "action.console.log",
+            "id": "log-donation",
+            "level": "info",
+            "message": {
+              "mode": "expression",
+              "expression": "LivePix: {{ $trigger.metadata.amountFormatted }} de {{ $trigger.actorDisplayName }}"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e-log",
+            "source": "livepix-donation",
+            "target": "log-donation"
+          }
+        ],
+        "layout": {
+          "livepix-donation": {
+            "x": 0,
+            "y": 0
+          },
+          "log-donation": {
+            "x": 380,
+            "y": 0
+          }
+        }
+      }
+    }
+  ]
+}
