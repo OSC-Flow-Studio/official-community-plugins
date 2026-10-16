@@ -81,14 +81,25 @@ From a clean working tree on the branch you release from, run:
 npm run release
 ```
 
-It lists the plugins with their manifest and last published versions, asks which plugin
-and which version (the current manifest version when it was never published, the next
-patch, minor or major, or one you type), and asks for the changelog lines when
-`CHANGELOG.md` has no section for that version. Then it sets the manifest version, adds
-the section, runs `npm run check`, shows the git commands and, once you confirm, commits
+Pick the plugin and the version with the arrow keys and Enter: the current manifest
+version when it was never published, the next patch, minor or major, or one you type.
+When `CHANGELOG.md` has no section for that version, type its lines (Enter twice to
+finish). It then sets the manifest version, adds the section, runs `npm run check`, and
+shows the release plan with the exact git commands. Once you confirm, it commits
 `🧹 Chore: Release <name> <version>`, creates the annotated tag and pushes the branch and
-the tag together. A failed check, a cancel or closed input restores both files.
-`npm run release -- --dry-run` does everything except the git commands.
+the tag together. Ctrl+C, a "No" or a failed check restores both files.
+
+The same release without questions, for scripts and CI:
+
+```powershell
+npm run release -- --plugin livepix --version patch --notes "Fix the reconnect timer" --yes
+npm run release -- --plugin livepix --version 2.1.0 --dry-run
+```
+
+`--version` takes `patch`, `minor`, `major`, `current` or an exact version, and `--notes`
+can be repeated. Without a terminal, every answer must come as a flag, plus `--yes` or
+`--dry-run`. `--dry-run` does everything except the git commands, and `--help` lists the
+options.
 
 To release by hand instead: set the version, add a `## <version>` section to the
 plugin's `CHANGELOG.md` (its text becomes the release notes), push, wait for **Validate
