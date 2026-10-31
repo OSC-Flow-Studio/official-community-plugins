@@ -1,0 +1,5 @@
+{
+  "keyId": "osc-flow-studio-2026-10",
+  "payload": "{\"type\":\"osc-flow-studio.package-attestation\",\"publisher\":\"osc-flow-studio\",\"packageId\":\"io.github.osc-flow-studio.livepix\",\"version\":\"3.0.0\",\"sha256\":\"81117570f65f6d52ed6ba0159e3c2ae51b734e4005da54a07af6b4863f0ca24a\",\"size\":17516}",
+  "signature": "aMTNWrYL+qQIEUhcezPzJ+fOYeA5JiFSSFA6611eETcTbL5CbO4PFUhXinUDxiA8AoUokZ3V/iTxKCMCuDMMBg=="
+}
