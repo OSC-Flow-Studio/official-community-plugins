@@ -10,13 +10,14 @@
 //   npm run release -- --plugin livepix --version patch --notes "Fix the timer" --yes
 //   npm run release -- --dry-run      everything except git; the files are restored
 import { execFile, spawn } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
 import * as prompts from "@clack/prompts";
 import color from "picocolors";
 import { catalogUrl, repository } from "./build-catalog.mjs";
+import { loadSigningKey, publicKeyOf, signPluginDir } from "./signing.mjs";
 import { listPlugins, root, tagFor } from "./plugins.mjs";
 import {
   addChangelogSection,
@@ -109,7 +110,12 @@ export async function releasePlugin({ argv = process.argv.slice(2), input = proc
   prompts.intro(color.bgMagenta(color.black(" Release a community plugin ")) + (dryRun ? color.dim("  dry run") : ""), io);
 
   // 1. The tree must be clean and up to date, or the release would publish something else.
-  const spin = prompts.spinner({ output });
+  // Without a terminal an animated spinner would print one line per frame; log plain lines.
+  const spin = interactive ? prompts.spinner({ output }) : {
+    start: (message) => prompts.log.step(message, io),
+    stop: (message) => prompts.log.success(message, io),
+    error: (message) => prompts.log.error(message, io),
+  };
   spin.start("Checking the working tree and fetching tags");
   let branch;
   let upstream;
@@ -130,6 +136,20 @@ export async function releasePlugin({ argv = process.argv.slice(2), input = proc
     throw error;
   }
   spin.stop(`On ${color.cyan(branch)}, up to date with ${upstream}`);
+
+  // The ZIP is signed here, with the key in .env. The workflow only verifies the signature.
+  let signing;
+  try {
+    signing = loadSigningKey();
+  } catch (error) {
+    throw new Stop(`${error.message}. See .env.example.`);
+  }
+  if (!signing) throw new Stop("There is no signing key. Run npm run keygen, or copy .env.example to .env and fill it in.");
+  const keysFile = join(root, "scripts", "official-keys.json");
+  const registered = existsSync(keysFile) ? JSON.parse(readFileSync(keysFile, "utf8")).keys.find((entry) => entry.keyId === signing.keyId) : undefined;
+  if (registered?.publicKey !== publicKeyOf(signing.privateKey)) {
+    throw new Stop(`The key "${signing.keyId}" in .env is not the one scripts/official-keys.json lists under that id, so the release workflow would refuse its signature.`);
+  }
 
   // 2. Which plugin.
   const tags = (await git("tag", "--list", "*-v*")).split("\n").filter(Boolean);
@@ -192,8 +212,15 @@ export async function releasePlugin({ argv = process.argv.slice(2), input = proc
   // 4. The release notes, unless CHANGELOG.md already has them.
   const manifestPath = join(plugin.pluginDir, "manifest.json");
   const changelogPath = join(plugin.dir, "CHANGELOG.md");
-  const originals = new Map([[manifestPath, readFileSync(manifestPath, "utf8")], [changelogPath, readFileSync(changelogPath, "utf8")]]);
-  const restore = () => { for (const [path, text] of originals) writeFileSync(path, text); };
+  const signaturePath = join(plugin.dir, "signatures", `${version}.json`);
+  const read = (path) => (existsSync(path) ? readFileSync(path, "utf8") : null);
+  const originals = new Map([manifestPath, changelogPath, signaturePath].map((path) => [path, read(path)]));
+  const restore = () => {
+    for (const [path, text] of originals) {
+      if (text === null) rmSync(path, { force: true });
+      else writeFileSync(path, text);
+    }
+  };
   let changelog = originals.get(changelogPath);
   if (hasChangelogSection(changelog, version)) {
     prompts.log.info(`CHANGELOG.md already has a ${version} section; it becomes the release notes.`, io);
@@ -227,7 +254,12 @@ export async function releasePlugin({ argv = process.argv.slice(2), input = proc
     const passed = /# pass (\d+)/.exec(checks.output)?.[1];
     spin.stop(`Checks passed${passed ? ` (${passed} tests)` : ""}`);
 
-    const changed = [...originals].filter(([path, text]) => readFileSync(path, "utf8") !== text).map(([path]) => relative(root, path).split(sep).join("/"));
+    // The workflow rebuilds the same bytes from the tagged commit and checks this signature.
+    spin.start("Packing and signing the ZIP");
+    const { packed } = signPluginDir(plugin, signing);
+    spin.stop(`Signed ${packed.name} with ${signing.keyId}`);
+
+    const changed = [...originals].filter(([path, text]) => read(path) !== text).map(([path]) => relative(root, path).split(sep).join("/"));
     const tag = tagFor({ id: plugin.id, version });
     const message = `🧹 Chore: Release ${plugin.manifest.name} ${version}`;
     const steps = [
@@ -243,6 +275,7 @@ export async function releasePlugin({ argv = process.argv.slice(2), input = proc
       `${color.dim("Plugin ")}  ${plugin.manifest.name} ${color.dim(`(${plugin.id})`)}`,
       `${color.dim("Version")}  ${latest ?? "unpublished"} ${color.dim("->")} ${color.green(version)}`,
       `${color.dim("Branch ")}  ${branch}`,
+      `${color.dim("Signed ")}  ${signing.keyId}, SHA-256 ${packed.sha256.slice(0, 16)}`,
       `${color.dim("Files  ")}  ${changed.length > 0 ? changed.join(", ") : "none (the tag goes on the current commit)"}`,
       "",
       ...steps.flatMap((step) => step.commands).map((args) => color.dim(shell(args))),

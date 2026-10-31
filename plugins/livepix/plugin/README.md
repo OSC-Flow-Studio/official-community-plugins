@@ -1,6 +1,6 @@
-# LivePix 2.0.1
+# LivePix 3.0.0
 
-Plugin comunitário para OSC Flow Studio 0.5.x. Cada doação que chega ao LivePix vira um
+Plugin comunitário para OSC Flow Studio 1.x. Cada doação que chega ao LivePix vira um
 gatilho de flow. As doações passam pelo **OSC LivePix Dashboard**
 (`https://livepix.maned.club`), que recebe o webhook do LivePix, guarda cada doação e
 entrega ao plugin em tempo real.

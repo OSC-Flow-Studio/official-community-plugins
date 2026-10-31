@@ -124,7 +124,32 @@ export function validatePluginDir(dir) {
     } else if (!existsSync(join(dir, manifest.entry))) {
       issues.push(`entry module "${manifest.entry}" is missing`);
     }
-    if (typeof manifest.apiVersion !== "number") issues.push("apiVersion is required when entry is set");
+    if (manifest.apiVersion !== 2) {
+      issues.push("apiVersion must be 2: plugins with code run in a process of their own and declare permissions");
+    }
+    const permissions = manifest.permissions;
+    if (!permissions || typeof permissions !== "object" || Array.isArray(permissions)) {
+      issues.push("permissions is required when entry is set (secrets, resources, haptics, processes, network)");
+    } else {
+      for (const key of Object.keys(permissions)) {
+        if (!["secrets", "resources", "haptics", "processes", "network"].includes(key)) issues.push(`permissions.${key} is not a known permission`);
+      }
+      for (const key of ["secrets", "resources", "haptics", "processes"]) {
+        if (permissions[key] !== undefined && typeof permissions[key] !== "boolean") issues.push(`permissions.${key} must be true or false`);
+      }
+      if (permissions.network !== undefined && !["none", "local", "internet", "any"].includes(permissions.network)) {
+        issues.push('permissions.network must be "none", "local", "internet" or "any"');
+      }
+      const secretFields = (manifest.configSchema?.fields ?? []).some((field) => field?.type === "secret") ||
+        (manifest.connectionSchema?.secretFields?.length ?? 0) > 0;
+      if (secretFields && permissions.secrets !== true) {
+        issues.push("a secret config or connection field needs permissions.secrets: true");
+      }
+      const hapticsCapability = (manifest.capabilities ?? []).includes("haptics");
+      if (hapticsCapability !== (permissions.haptics === true)) {
+        issues.push("the haptics capability and permissions.haptics must agree");
+      }
+    }
   }
   const fields = manifest.configSchema?.fields ?? [];
   if (!fields.some((field) => field.key === "enabled" && field.type === "boolean")) {

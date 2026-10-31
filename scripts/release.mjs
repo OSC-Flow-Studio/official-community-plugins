@@ -1,11 +1,14 @@
 // Called only by the tag workflow. Running this script publishes a GitHub release.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repository, writeCatalog } from "./build-catalog.mjs";
 import { packagePlugins } from "./package.mjs";
 import { parseTag, readPlugin, root } from "./plugins.mjs";
+import { attestationProblem, officialPublicKeys } from "./signing.mjs";
+
+const readSignatureFile = (path) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null);
 
 const runGh = (...args) => execFileSync("gh", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
 
@@ -25,6 +28,8 @@ export async function publishRelease({
   pack = packagePlugins,
   createCatalog = writeCatalog,
   outDir = join(root, "dist"),
+  readSignature = readSignatureFile,
+  publicKeys = undefined,
 } = {}) {
   const tag = environment.GITHUB_REF?.startsWith("refs/tags/") ? environment.GITHUB_REF.slice("refs/tags/".length) : "";
   const parsed = parseTag(tag);
@@ -52,12 +57,26 @@ export async function publishRelease({
     previous = await response.json();
   }
   const [archive] = pack([parsed.id]);
+  // The maintainer signed these exact bytes when releasing; the ZIP is reproducible, so the
+  // one built here must carry the same SHA-256. Nothing is published without it.
+  const attestation = readSignature(join(dir, "signatures", `${manifest.version}.json`));
+  if (!attestation) throw new Error(`${tag} is not signed: plugins/${parsed.id}/signatures/${manifest.version}.json is missing. Release with npm run release.`);
+  const problem = attestationProblem(attestation, {
+    publicKeys: publicKeys ?? officialPublicKeys(),
+    packageId: manifest.packageId,
+    version: manifest.version,
+    sha256: archive.sha256,
+    size: archive.size,
+  });
+  if (problem) throw new Error(`The signature of ${tag} does not hold: ${problem}`);
   const catalog = createCatalog({ ids: [parsed.id], previous });
   mkdirSync(outDir, { recursive: true });
+  const signatureFile = join(outDir, `${archive.name}.sig`);
+  writeFileSync(signatureFile, `${JSON.stringify(attestation)}\n`);
   const notesFile = join(outDir, "release-notes.md");
   writeFileSync(notesFile, notes);
-  // The catalog and ZIP become public together: no public catalog points at a missing ZIP.
-  gh("release", "create", tag, archive.path, `${archive.path}.sha256`, catalog,
+  // The catalog, ZIP and signature become public together: no public catalog points at a missing ZIP.
+  gh("release", "create", tag, archive.path, `${archive.path}.sha256`, signatureFile, catalog,
     "--repo", repository, "--verify-tag", "--draft", "--title", `${manifest.name} ${manifest.version}`,
     "--notes-file", notesFile);
   gh("release", "edit", tag, "--repo", repository, "--draft=false", "--latest");

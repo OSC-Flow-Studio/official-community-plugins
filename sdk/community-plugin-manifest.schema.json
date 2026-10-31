@@ -54,7 +54,7 @@
           "haptics"
         ]
       },
-      "description": "Capability labels shown during installation."
+      "description": "Labels shown during installation. What the plugin may do is declared in permissions, not here."
     },
     "entry": {
       "type": "string",
@@ -62,8 +62,46 @@
       "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
     },
     "apiVersion": {
-      "description": "Community runtime SDK contract version.",
-      "const": 1
+      "description": "Community runtime SDK contract version. Version 2 runs the plugin in a process of its own with the permissions below.",
+      "const": 2
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "secrets": {
+          "type": "boolean",
+          "default": false,
+          "description": "Read and write its own secrets in the vault. Required when a config or connection field is a secret."
+        },
+        "resources": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish live lists (ctx.setResource) for resource-select fields."
+        },
+        "haptics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Drive low-risk vibration hardware. Must match the haptics capability."
+        },
+        "processes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start programs and run commands as the person's Windows account. Without it the plugin cannot start any. What it starts runs outside the sandbox, so the plugin may also read any file the account can."
+        },
+        "network": {
+          "type": "string",
+          "enum": [
+            "none",
+            "local",
+            "internet",
+            "any"
+          ],
+          "default": "none",
+          "description": "Where the plugin connects: none, local (home network), internet, or any. Shown before consent; the app cannot enforce it."
+        }
+      },
+      "additionalProperties": false,
+      "description": "What the plugin's code may do. Required with an entry module. The backend mints the plugin's key from it, the install dialog shows it, and an update that asks for more asks the person again."
     },
     "connectionSchema": {
       "type": "object",
@@ -711,6 +749,105 @@
                                   },
                                   "maxItems": 16
                                 },
+                                "enabledWhen": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "mode": {
+                                          "type": "string",
+                                          "const": "fixed"
+                                        },
+                                        "value": {
+                                          "type": [
+                                            "string",
+                                            "number",
+                                            "boolean"
+                                          ]
+                                        },
+                                        "expression": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        }
+                                      },
+                                      "required": [
+                                        "mode",
+                                        "value"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "mode": {
+                                          "type": "string",
+                                          "const": "expression"
+                                        },
+                                        "expression": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        "value": {
+                                          "type": [
+                                            "string",
+                                            "number",
+                                            "boolean"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "mode",
+                                        "expression"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  ]
+                                },
+                                "skipBranch": {
+                                  "type": "boolean"
+                                },
+                                "delayBefore": {
+                                  "type": "object",
+                                  "properties": {
+                                    "enabled": {
+                                      "type": "boolean",
+                                      "default": true
+                                    },
+                                    "duration": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 3600000
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "ms",
+                                        "s",
+                                        "m",
+                                        "h"
+                                      ],
+                                      "default": "s"
+                                    },
+                                    "mode": {
+                                      "type": "string",
+                                      "enum": [
+                                        "fixed",
+                                        "expression"
+                                      ]
+                                    },
+                                    "expression": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "duration"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "cooldown": {
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
+                                },
                                 "localCommands": {
                                   "type": "array",
                                   "items": {
@@ -827,34 +964,6 @@
                                   },
                                   "default": []
                                 },
-                                "cooldown": {
-                                  "type": "object",
-                                  "properties": {
-                                    "enabled": {
-                                      "type": "boolean",
-                                      "default": true
-                                    },
-                                    "duration": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 3600000
-                                    },
-                                    "unit": {
-                                      "type": "string",
-                                      "enum": [
-                                        "ms",
-                                        "s",
-                                        "m",
-                                        "h"
-                                      ],
-                                      "default": "s"
-                                    }
-                                  },
-                                  "required": [
-                                    "duration"
-                                  ],
-                                  "additionalProperties": false
-                                },
                                 "inputModeOverride": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/localCommands/items/properties/inputModeOverride",
                                   "default": "inherit"
@@ -877,58 +986,7 @@
                                   "type": "string"
                                 },
                                 "address": {
-                                  "anyOf": [
-                                    {
-                                      "type": "object",
-                                      "properties": {
-                                        "mode": {
-                                          "type": "string",
-                                          "const": "fixed"
-                                        },
-                                        "value": {
-                                          "type": [
-                                            "string",
-                                            "number",
-                                            "boolean"
-                                          ]
-                                        },
-                                        "expression": {
-                                          "type": "string",
-                                          "minLength": 1
-                                        }
-                                      },
-                                      "required": [
-                                        "mode",
-                                        "value"
-                                      ],
-                                      "additionalProperties": false
-                                    },
-                                    {
-                                      "type": "object",
-                                      "properties": {
-                                        "mode": {
-                                          "type": "string",
-                                          "const": "expression"
-                                        },
-                                        "expression": {
-                                          "type": "string",
-                                          "minLength": 1
-                                        },
-                                        "value": {
-                                          "type": [
-                                            "string",
-                                            "number",
-                                            "boolean"
-                                          ]
-                                        }
-                                      },
-                                      "required": [
-                                        "mode",
-                                        "expression"
-                                      ],
-                                      "additionalProperties": false
-                                    }
-                                  ]
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "args": {
                                   "type": "array",
@@ -950,7 +1008,7 @@
                                             ]
                                           },
                                           "value": {
-                                            "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                            "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                           }
                                         },
                                         "required": [
@@ -1052,7 +1110,7 @@
                                   "type": "string"
                                 },
                                 "meters": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "maxMeters": {
                                   "type": "number",
@@ -1117,7 +1175,7 @@
                                             "value": {
                                               "anyOf": [
                                                 {
-                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                                 },
                                                 {
                                                   "type": "object",
@@ -1186,7 +1244,7 @@
                                   "default": ""
                                 },
                                 "name": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "matchMode": {
                                   "type": "string",
@@ -1254,7 +1312,7 @@
                                   "type": "string"
                                 },
                                 "avatarId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "inputMode": {
                                   "type": "string",
@@ -1282,7 +1340,7 @@
                                   "type": "string"
                                 },
                                 "ms": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -1381,7 +1439,7 @@
                                   "type": "string"
                                 },
                                 "text": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "sendImmediately": {
                                   "type": "boolean",
@@ -1440,7 +1498,7 @@
                                   "default": "info"
                                 },
                                 "message": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -1713,7 +1771,7 @@
                                   "type": "string"
                                 },
                                 "audioDeviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "audioDeviceName": {
                                   "type": "string",
@@ -1737,7 +1795,7 @@
                                   "type": "string"
                                 },
                                 "audioDeviceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "audioDeviceName": {
                                   "type": "string",
@@ -1769,7 +1827,7 @@
                                   "default": "process"
                                 },
                                 "nameFilter": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -1793,7 +1851,7 @@
                                   "default": "process"
                                 },
                                 "targetName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -1816,7 +1874,7 @@
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/23/properties/targetKind"
                                 },
                                 "targetName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -1885,14 +1943,14 @@
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 15
                                   }
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1000
@@ -1902,7 +1960,7 @@
                                   "type": "object",
                                   "properties": {
                                     "enabled": {
-                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                       "default": {
                                         "mode": "fixed",
                                         "value": false
@@ -2226,14 +2284,14 @@
                                   }
                                 },
                                 "intensity": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 15
                                   }
                                 },
                                 "durationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1000
@@ -2668,7 +2726,7 @@
                                   "type": "string"
                                 },
                                 "message": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -2826,13 +2884,13 @@
                                   "type": "string"
                                 },
                                 "content": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "username": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "avatarUrl": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "embeds": {
                                   "type": "array",
@@ -2840,22 +2898,22 @@
                                     "type": "object",
                                     "properties": {
                                       "title": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "description": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "color": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "footer": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "thumbnail": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "image": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "timestamp": {
                                         "type": "boolean"
@@ -2866,10 +2924,10 @@
                                           "type": "object",
                                           "properties": {
                                             "name": {
-                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                             },
                                             "value": {
-                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                             },
                                             "inline": {
                                               "type": "boolean"
@@ -3147,10 +3205,10 @@
                                   "default": "any"
                                 },
                                 "commandName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "textPattern": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3176,10 +3234,10 @@
                                   "type": "string"
                                 },
                                 "chatId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "text": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "parseMode": {
                                   "type": "string",
@@ -3234,7 +3292,7 @@
                                   "default": "exists"
                                 },
                                 "expectedValue": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -3268,7 +3326,7 @@
                                   "default": "text"
                                 },
                                 "payload": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -3820,11 +3878,11 @@
                                   "default": "toast"
                                 },
                                 "title": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": ""
                                 },
                                 "body": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": ""
                                 },
                                 "icon": {
@@ -4638,7 +4696,7 @@
                                   "default": 0
                                 },
                                 "deduplicationKey": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "transition": {
                                   "type": "string",
@@ -4840,7 +4898,7 @@
                                   "default": ""
                                 },
                                 "label": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "icon": {
                                   "anyOf": [
@@ -4855,7 +4913,7 @@
                                   "default": ""
                                 },
                                 "description": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "textAlign": {
                                   "type": "string",
@@ -4886,10 +4944,10 @@
                                   "default": "keep"
                                 },
                                 "color": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "statusColor": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "restore": {
                                   "type": "boolean",
@@ -4917,10 +4975,10 @@
                                   "default": ""
                                 },
                                 "value": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "title": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "icon": {
                                   "anyOf": [
@@ -4935,10 +4993,10 @@
                                   "default": ""
                                 },
                                 "description": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "color": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "fillStyle": {
                                   "type": "string",
@@ -4950,7 +5008,7 @@
                                   "default": "keep"
                                 },
                                 "fillColor": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "thresholdsMode": {
                                   "type": "string",
@@ -5030,17 +5088,17 @@
                                   "default": "setProgramScene"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "transitionName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "transitionDurationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -5073,14 +5131,14 @@
                                   "default": "show"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5097,16 +5155,16 @@
                                   "default": "png"
                                 },
                                 "imageFilePath": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "imageWidth": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "imageHeight": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "imageCompressionQuality": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -5139,14 +5197,14 @@
                                   "default": "toggleMute"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "volumeDb": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -5223,7 +5281,7 @@
                                   "default": "play"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5258,7 +5316,7 @@
                                   "default": "setProfile"
                                 },
                                 "name": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5294,14 +5352,14 @@
                                   "default": "toggle"
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "filterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5357,14 +5415,14 @@
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/89/properties/connectionId"
                                 },
                                 "requestType": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "requestData": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": "{}"
@@ -5391,14 +5449,14 @@
                                   "type": "string"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "settings": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": "{}"
@@ -5441,77 +5499,77 @@
                                   "default": "setPosition"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "positionX": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "positionY": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "scaleX": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1
                                   }
                                 },
                                 "scaleY": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1
                                   }
                                 },
                                 "rotation": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "cropLeft": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "cropRight": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "cropTop": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
                                   }
                                 },
                                 "cropBottom": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
@@ -5522,7 +5580,7 @@
                                   "default": false
                                 },
                                 "index": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 0
@@ -5558,14 +5616,14 @@
                                   "default": "setCurrent"
                                 },
                                 "transitionName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "transitionDurationMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -5588,7 +5646,7 @@
                                   "type": "string"
                                 },
                                 "eventData": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": "{}"
@@ -5715,7 +5773,7 @@
                                   "type": "string"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5742,14 +5800,14 @@
                                   "type": "string"
                                 },
                                 "sceneName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5776,7 +5834,7 @@
                                   "type": "string"
                                 },
                                 "inputName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -5803,14 +5861,14 @@
                                   "type": "string"
                                 },
                                 "sourceName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
                                   }
                                 },
                                 "filterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": ""
@@ -6143,7 +6201,7 @@
                                   "type": "string"
                                 },
                                 "voiceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -6296,7 +6354,7 @@
                                   "type": "string"
                                 },
                                 "soundId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "isKeyDown": {
                                   "type": "boolean",
@@ -6357,10 +6415,10 @@
                                   "type": "string"
                                 },
                                 "parameterName": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "value": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -6476,7 +6534,7 @@
                                   "type": "string"
                                 },
                                 "resourceId": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "cooldown": {
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown"
@@ -6515,7 +6573,7 @@
                                         "type": "string"
                                       },
                                       "address": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "matchMode": {
                                         "type": "string",
@@ -6598,7 +6656,7 @@
                                 },
                                 "intervalMs": {
                                   "type": "integer",
-                                  "minimum": 1000,
+                                  "minimum": 10,
                                   "default": 60000
                                 },
                                 "runAt": {
@@ -6765,7 +6823,7 @@
                                   "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/139/properties/variableScope"
                                 },
                                 "by": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address",
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen",
                                   "default": {
                                     "mode": "fixed",
                                     "value": 1
@@ -6921,13 +6979,13 @@
                                   "type": "string"
                                 },
                                 "input": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "min": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "max": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "variableName": {
                                   "type": "string",
@@ -6955,10 +7013,10 @@
                                   "type": "string"
                                 },
                                 "minMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "maxMs": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 }
                               },
                               "required": [
@@ -6990,7 +7048,7 @@
                                   "default": "GET"
                                 },
                                 "url": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "headers": {
                                   "type": "array",
@@ -7008,7 +7066,7 @@
                                         "default": ""
                                       },
                                       "value": {
-                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                        "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                       },
                                       "secretId": {
                                         "type": "string",
@@ -7042,7 +7100,7 @@
                                   "default": "none"
                                 },
                                 "body": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "timeoutMs": {
                                   "type": "integer",
@@ -7155,7 +7213,7 @@
                                           "maximum": 10000
                                         },
                                         "until": {
-                                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                         }
                                       },
                                       "additionalProperties": false,
@@ -7195,7 +7253,7 @@
                                                 "type": "boolean"
                                               },
                                               {
-                                                "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                                "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                               }
                                             ],
                                             "default": true
@@ -7266,7 +7324,7 @@
                                                   "default": "linear"
                                                 },
                                                 "condition": {
-                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                                 },
                                                 "jitterMs": {
                                                   "type": "integer",
@@ -7337,10 +7395,10 @@
                                   "default": "restart"
                                 },
                                 "holdWhile": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "rate": {
-                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/1/properties/address"
+                                  "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                                 },
                                 "transportId": {
                                   "type": "string",
@@ -7379,6 +7437,18 @@
                             },
                             "saveToVariables": {
                               "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables"
+                            },
+                            "enabledWhen": {
+                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
+                            },
+                            "skipBranch": {
+                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/skipBranch"
+                            },
+                            "delayBefore": {
+                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
+                            },
+                            "cooldown": {
+                              "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
                             }
                           }
                         }
@@ -7414,6 +7484,18 @@
                         },
                         "saveToVariables": {
                           "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/saveToVariables"
+                        },
+                        "enabledWhen": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
+                        },
+                        "skipBranch": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/skipBranch"
+                        },
+                        "delayBefore": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
+                        },
+                        "cooldown": {
+                          "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/1/properties/cooldown"
                         }
                       },
                       "required": [
@@ -7696,7 +7778,7 @@
                 "type": "object",
                 "properties": {
                   "cooldown": {
-                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/cooldown",
+                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore",
                     "default": {
                       "enabled": false,
                       "duration": 0,
@@ -7708,6 +7790,12 @@
                     "minimum": 0,
                     "maximum": 5000,
                     "default": 0
+                  },
+                  "nodeDelay": {
+                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
+                  },
+                  "nodeCooldown": {
+                    "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/delayBefore"
                   }
                 },
                 "additionalProperties": false,
@@ -7817,6 +7905,9 @@
                       },
                       "maxItems": 500,
                       "default": []
+                    },
+                    "enabled": {
+                      "$ref": "#/properties/templates/items/properties/flow/properties/nodes/items/anyOf/0/allOf/0/anyOf/0/properties/enabledWhen"
                     }
                   },
                   "required": [
@@ -7985,10 +8076,12 @@
       },
       "then": {
         "properties": {
-          "apiVersion": {}
+          "apiVersion": {},
+          "permissions": {}
         },
         "required": [
-          "apiVersion"
+          "apiVersion",
+          "permissions"
         ]
       }
     },

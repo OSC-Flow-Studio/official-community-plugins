@@ -2,10 +2,10 @@
   "$schema": "../../../sdk/community-plugin-manifest.schema.json",
   "id": "giggle-puck",
   "name": "Giggle Puck",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packageId": "io.github.osc-flow-studio.giggle-puck",
   "engines": {
-    "oscFlowStudio": ">=0.5.10 <0.6.0"
+    "oscFlowStudio": ">=1.0.0 <2.0.0"
   },
   "author": {
     "name": "OSC Flow Studio",
@@ -18,7 +18,8 @@
   "capabilities": ["triggers", "actions", "templates", "haptics", "local-network"],
   "appearance": { "icon": "vibrate", "accent": "fuchsia" },
   "entry": "index.mjs",
-  "apiVersion": 1,
+  "apiVersion": 2,
+  "permissions": { "secrets": false, "resources": true, "haptics": true, "network": "local" },
   "configSchema": {
     "tabs": [
       { "id": "general", "label": "General", "description": "Switch, discovery and how often to look for Pucks." },

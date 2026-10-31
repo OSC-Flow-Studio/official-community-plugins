@@ -2,10 +2,10 @@
   "$schema": "../../../sdk/community-plugin-manifest.schema.json",
   "id": "livepix",
   "name": "LivePix",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "packageId": "io.github.osc-flow-studio.livepix",
   "engines": {
-    "oscFlowStudio": ">=0.5.4 <0.6.0"
+    "oscFlowStudio": ">=1.0.0 <2.0.0"
   },
   "author": {
     "name": "OSC Flow Studio",
@@ -21,7 +21,8 @@
     "secrets"
   ],
   "entry": "index.mjs",
-  "apiVersion": 1,
+  "apiVersion": 2,
+  "permissions": { "secrets": true, "resources": false, "haptics": false, "network": "any" },
   "configSchema": {
     "tabs": [
       {

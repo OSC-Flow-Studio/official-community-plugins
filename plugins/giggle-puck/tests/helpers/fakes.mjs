@@ -159,7 +159,7 @@ export function context(config = {}) {
     logs,
     ctx: {
       pluginId: "giggle-puck",
-      apiVersion: 1,
+      apiVersion: 2,
       signal: controller.signal,
       config: { get: async () => values },
       secrets: { get: async () => null, set: async () => {}, delete: async () => {} },

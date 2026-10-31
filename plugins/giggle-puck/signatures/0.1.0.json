@@ -1,0 +1,5 @@
+{
+  "keyId": "osc-flow-studio-2026-10",
+  "payload": "{\"type\":\"osc-flow-studio.package-attestation\",\"publisher\":\"osc-flow-studio\",\"packageId\":\"io.github.osc-flow-studio.giggle-puck\",\"version\":\"0.1.0\",\"sha256\":\"a397a9d4c009f3801b963dc29dbee42e4d9e184e632ae2abb63465ee11e2480b\",\"size\":20004}",
+  "signature": "fsmjdSwY8NB5rLaM3Q50ERm7Hpl7qQ+3dCuuaB/hkkr9TqfBoxgbAatXyId1XWniL3nx8jQYOPZohjp8wHoeAw=="
+}

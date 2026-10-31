@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0 (2026-10-17)
+
+- Built for plugin SDK 2. OSC Flow Studio runs the plugin in a process of its own and
+  gives it only what the manifest asks for: its own secrets (the LivePix token and the
+  processed-ID ledger) and network access to LivePix and to the dashboard address you
+  configure. The code is unchanged. Requires OSC Flow Studio 1.0.0 or newer; older
+  Studio builds, which speak SDK 1, keep using 2.0.1.
+
 ## 2.0.1 (2026-09-22)
 
 - Published from `OSC-Flow-Studio/official-community-plugins`. Follow the community

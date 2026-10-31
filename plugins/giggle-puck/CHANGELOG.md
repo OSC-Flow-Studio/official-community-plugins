@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 (2026-10-17)
+
+- Built for plugin SDK 2. OSC Flow Studio runs the plugin in a process of its own and
+  gives it only what the manifest asks for: vibration hardware, the live list of Pucks
+  for the device picker, and the home network (multicast DNS and OSC to the Pucks). The
+  code is unchanged. Requires OSC Flow Studio 1.0.0 or newer; older Studio builds,
+  which speak SDK 1, keep using 0.1.0.
+
 ## 0.1.0 (2026-10-16)
 
 - First release. Drives GiggleTech Giggle Puck motors from VRChat avatar contacts and

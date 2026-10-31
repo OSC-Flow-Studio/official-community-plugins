@@ -20,8 +20,8 @@ test("the bundled SDK builds a reproducible installable LivePix ZIP", () => {
     assert.equal(manifest.id, "livepix");
     // The package and plugin ids are what installed flows, configs and the vault are keyed by.
     assert.equal(manifest.packageId, "io.github.osc-flow-studio.livepix");
-    // The subathon start uses the native date field, which needs Studio 0.5.4.
-    assert.equal(manifest.engines.oscFlowStudio, ">=0.5.4 <0.6.0");
+    // Plugin SDK 2 (apiVersion 2 and permissions) needs Studio 1.0.0.
+    assert.equal(manifest.engines.oscFlowStudio, ">=1.0.0 <2.0.0");
   } finally {
     rmSync(out, { recursive: true, force: true });
   }

@@ -66,7 +66,7 @@ test("the package is reproducible, needs the Studio with appearance, and is a ha
     const packed = readManifestFromZip(bytes);
     assert.equal(packed.id, "giggle-puck");
     assert.equal(packed.packageId, "io.github.osc-flow-studio.giggle-puck");
-    assert.equal(packed.engines.oscFlowStudio, ">=0.5.10 <0.6.0");
+    assert.equal(packed.engines.oscFlowStudio, ">=1.0.0 <2.0.0");
     assert.ok(packed.capabilities.includes("haptics"));
     assert.ok(!packed.capabilities.includes("safety-notice"));
     const { icons, accents } = appearanceValues();

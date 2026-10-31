@@ -6,8 +6,8 @@ in the Studio; you install only the ones you want, and each one updates on its o
 
 | Plugin | Folder | Package id | Studio |
 | --- | --- | --- | --- |
-| LivePix | [plugins/livepix](plugins/livepix) | `io.github.osc-flow-studio.livepix` | `>=0.5.4 <0.6.0` |
-| Giggle Puck | [plugins/giggle-puck](plugins/giggle-puck) | `io.github.osc-flow-studio.giggle-puck` | `>=0.5.10 <0.6.0` |
+| LivePix | [plugins/livepix](plugins/livepix) | `io.github.osc-flow-studio.livepix` | `>=1.0.0 <2.0.0` |
+| Giggle Puck | [plugins/giggle-puck](plugins/giggle-puck) | `io.github.osc-flow-studio.giggle-puck` | `>=1.0.0 <2.0.0` |
 
 ## Install a plugin
 
@@ -64,6 +64,23 @@ It expects built `osc-flow-studio` and `catopanda-subathon` checkouts next to th
 repository; set `OSC_FLOW_STUDIO_ROOT` and `CATOPANDA_SUBATHON_ROOT` to point elsewhere.
 CI does not run it.
 
+## What a plugin may do
+
+Every plugin here is built for plugin SDK 2: `apiVersion: 2` and a `permissions` block in
+its manifest. The Studio runs each plugin in a process of its own that can read only its
+own folder, and hands it a key that carries exactly those permissions. The install dialog
+lists them before the person agrees.
+
+| Plugin | `secrets` | `resources` | `haptics` | `processes` | `network` |
+|---|---|---|---|---|---|
+| livepix | yes | no | no | no | `any` (LivePix and the dashboard address you configure) |
+| giggle-puck | no | yes | yes | no | `local` (multicast DNS and OSC to the Pucks) |
+
+The Studio cannot enforce `network`, so `npm run validate` does: a plugin whose code
+imports a socket module, or calls `fetch` or `WebSocket`, cannot declare `"none"`, and
+one that uses UDP or raw sockets must allow the local network. A new permission, or a
+wider network level, is a reason for a major version and a changelog line that says so.
+
 ## Release a plugin
 
 Owner: a maintainer with write access to this repository. The repository must stay
@@ -74,6 +91,33 @@ secret.
 Each plugin has its own version, in `version` of `plugins/<id>/plugin/manifest.json`, and
 is released by a tag made of its id, `-v`, and that version (`livepix-v2.0.1`). A
 repository tag such as `v0.0.1` publishes nothing.
+
+### Signing
+
+Every release is signed, so OSC Flow Studio can show the package as published by the OSC
+Flow Studio team instead of an unreviewed community plugin. The signature is an Ed25519
+statement over the package id, the version and the SHA-256 and size of the ZIP; it proves
+who published those exact bytes and grants the plugin nothing else.
+
+The private key lives in `.env` on the maintainer's machine and is never committed. Create
+it once:
+
+```powershell
+npm run keygen
+```
+
+That writes `OFS_SIGNING_KEY_ID` and `OFS_SIGNING_PRIVATE_KEY` to `.env` (see
+`.env.example`) and adds the public key to `scripts/official-keys.json`, which is
+committed. Keep a backup of `.env` somewhere safe. OSC Flow Studio only trusts keys
+compiled into it (`OFFICIAL_PUBLISHER_KEYS` in
+`apps/backend/src/packages/package-attestation.ts`), so a new key reaches users with an
+app update. `keygen` never replaces a key that is already in `.env`.
+
+The ZIP is reproducible. `npm run release` signs it locally and commits
+`plugins/<id>/signatures/<version>.json`; the release workflow rebuilds the ZIP from the
+tagged commit, refuses to publish when that signature is missing, made with an unknown
+key, or covers other bytes, and publishes it next to the ZIP as `<zip>.sig`. The key never
+reaches GitHub.
 
 From a clean working tree on the branch you release from, run:
 
@@ -102,25 +146,28 @@ can be repeated. Without a terminal, every answer must come as a flag, plus `--y
 options.
 
 To release by hand instead: set the version, add a `## <version>` section to the
-plugin's `CHANGELOG.md` (its text becomes the release notes), push, wait for **Validate
-plugins**, then push the tag:
+plugin's `CHANGELOG.md` (its text becomes the release notes), sign the build, commit
+everything, push, wait for **Validate plugins**, then push the tag:
 
 ```powershell
+npm run sign -- livepix
 git tag -a livepix-v2.0.2 -m "LivePix 2.0.2"
 git push origin livepix-v2.0.2
 ```
 
 **Release a community plugin** validates again, packs that one plugin, downloads
 `listing.json` from the latest release (whichever plugin published it), adds the new
-version and keeps every version already listed. It creates a draft holding the ZIP, its
-SHA-256 and the catalog, then publishes the draft and marks it latest, so the stable
+version and keeps every version already listed. It checks the signature against the ZIP
+it built, creates a draft holding the ZIP, its SHA-256, its signature and the catalog,
+then publishes the draft and marks it latest, so the stable
 catalog URL serves the new catalog and never points at a missing ZIP. Releases share one
 concurrency group, so two tags pushed together publish one after the other.
 
-Stop if validation fails, the tag does not match the manifest version, the latest
-release has no `listing.json`, or a release with the same tag exists. Never replace a
+Stop if validation fails, the signature does not hold, the tag does not match the
+manifest version, the latest release has no `listing.json`, or a release with the same tag
+exists. Never replace a
 published ZIP: bump the version and use a new tag. If the workflow stops after creating
-the draft, check its three assets on GitHub and publish that draft by hand. Mark it
+the draft, check its four assets on GitHub and publish that draft by hand. Mark it
 latest.
 
 To rebuild the catalog by hand from a copy of the public one:

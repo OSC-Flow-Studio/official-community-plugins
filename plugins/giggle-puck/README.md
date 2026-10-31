@@ -8,8 +8,8 @@ the ZIP is [plugin/README.md](plugin/README.md).
 | --- | --- |
 | Package id | `io.github.osc-flow-studio.giggle-puck` |
 | Block and config id | `giggle-puck` |
-| OSC Flow Studio | `>=0.5.10 <0.6.0` (`haptics`, `appearance`, `durationBaseUnit`) |
-| Runtime SDK | API 1 |
+| OSC Flow Studio | `>=1.0.0 <2.0.0` (plugin SDK 2) |
+| Runtime SDK | API 2, permissions `resources`, `haptics`, network `local` |
 | Capabilities | triggers, actions, templates, haptics, local-network |
 
 ## Protocol

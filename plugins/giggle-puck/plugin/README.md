@@ -1,4 +1,4 @@
-# Giggle Puck 0.1.0
+# Giggle Puck 0.2.0
 
 Makes a GiggleTech Giggle Puck vibrate when something touches a contact on your VRChat
 avatar. The plugin finds the Pucks on your network by itself; you do not need the
@@ -9,7 +9,7 @@ protocol.
 
 ## What you need
 
-- OSC Flow Studio 0.5.10 or newer, with VRChat sending OSC to it (the default port 9001).
+- OSC Flow Studio 1.0.0 or newer, with VRChat sending OSC to it (the default port 9001).
 - A Giggle Puck set up on the same network as your PC. To set one up, power it on, join
   the `Giggletech_haptics` Wi-Fi (password `giggletech`), open `http://192.168.4.1` and
   enter your own Wi-Fi.

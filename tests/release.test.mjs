@@ -6,11 +6,20 @@ import { join } from "node:path";
 import { publishRelease, releaseNotes } from "../scripts/release.mjs";
 import { repository } from "../scripts/build-catalog.mjs";
 import { readPlugin } from "../scripts/plugins.mjs";
+import { newKeyPair, signArtifact } from "../scripts/signing.mjs";
+import { createPrivateKey, createPublicKey } from "node:crypto";
 
 const { manifest } = readPlugin("livepix");
 const tag = `livepix-v${manifest.version}`;
 const environment = { GITHUB_REPOSITORY: repository, GITHUB_REF: `refs/tags/${tag}` };
-const archive = { path: "dist/livepix.zip" };
+const archive = { path: "dist/livepix.zip", name: "livepix.zip", sha256: "c".repeat(64), size: 17_476 };
+
+// A key of the test's own, standing in for the official one.
+const keys = newKeyPair();
+const privateKey = createPrivateKey({ key: Buffer.from(keys.privateKey, "base64"), format: "der", type: "pkcs8" });
+const publicKeys = new Map([["test-key", createPublicKey({ key: Buffer.from(keys.publicKey, "base64"), format: "der", type: "spki" })]]);
+const signed = (bytes = archive) => signArtifact({ keyId: "test-key", privateKey, packageId: manifest.packageId, version: manifest.version, sha256: bytes.sha256, size: bytes.size });
+const signing = { publicKeys, readSignature: () => signed() };
 
 function withOutDir(run) {
   const outDir = mkdtempSync(join(tmpdir(), "community-release-"));
@@ -22,6 +31,7 @@ test("the first release assembles every asset in a draft before making the catal
   const url = await publishRelease({
     environment,
     outDir,
+    ...signing,
     gh: (...args) => { calls.push(args); return args[0] === "api" ? "[[]]" : ""; },
     pack: (ids) => { assert.deepEqual(ids, ["livepix"]); return [archive]; },
     createCatalog: ({ ids, previous }) => { assert.deepEqual(ids, ["livepix"]); assert.equal(previous, undefined); return "dist/listing.json"; },
@@ -29,7 +39,8 @@ test("the first release assembles every asset in a draft before making the catal
   });
   assert.equal(url, `https://github.com/${repository}/releases/tag/${tag}`);
   assert.equal(calls.length, 3);
-  assert.deepEqual(calls[1].slice(0, 6), ["release", "create", tag, archive.path, `${archive.path}.sha256`, "dist/listing.json"]);
+  assert.deepEqual(calls[1].slice(0, 7), ["release", "create", tag, archive.path, `${archive.path}.sha256`, join(outDir, "livepix.zip.sig"), "dist/listing.json"]);
+  assert.deepEqual(JSON.parse(readFileSync(join(outDir, "livepix.zip.sig"), "utf8")), signed());
   assert.ok(calls[1].includes("--draft"));
   assert.ok(calls[1].includes("--verify-tag"));
   assert.equal(calls[1][calls[1].indexOf("--title") + 1], `LivePix ${manifest.version}`);
@@ -51,6 +62,7 @@ test("a release builds on the latest public catalog, whichever plugin published 
   const dependencies = {
     environment,
     outDir,
+    ...signing,
     gh: (...args) => {
       if (args[0] === "api") return JSON.stringify([[older, draft], [latest]]);
       mutations++;
@@ -72,6 +84,10 @@ test("a release builds on the latest public catalog, whichever plugin published 
   await assert.rejects(publishRelease({ ...dependencies, environment: { ...environment, GITHUB_REF: "refs/tags/missing-v1.0.0" } }), /no plugin\/manifest\.json/);
   await assert.rejects(publishRelease({ ...dependencies, fetchPublic: async () => ({ ok: false, status: 404 }) }), /HTTP 404/);
   await assert.rejects(publishRelease({ ...dependencies, gh: () => JSON.stringify([[{ ...latest, assets: [] }]]) }), /has no listing\.json/);
+  // Nothing goes public unsigned, or signed for other bytes.
+  await assert.rejects(publishRelease({ ...dependencies, readSignature: () => null }), /is not signed/);
+  await assert.rejects(publishRelease({ ...dependencies, readSignature: () => signed({ sha256: "d".repeat(64), size: archive.size }) }), /different ZIP bytes/);
+  await assert.rejects(publishRelease({ ...dependencies, publicKeys: new Map() }), /not an official key/);
   assert.equal(mutations, 0);
 }));
 

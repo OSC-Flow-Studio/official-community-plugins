@@ -1,6 +1,6 @@
 # LivePix
 
-Every LivePix donation triggers a flow in OSC Flow Studio 0.5.x. Donations reach the
+Every LivePix donation triggers a flow in OSC Flow Studio 1.x. Donations reach the
 plugin through the **OSC LivePix Dashboard** (`https://livepix.maned.club`), which
 receives the LivePix webhook, stores each donation and delivers it over WebSocket, with
 the dashboard API as the fallback while the socket is down.
@@ -9,8 +9,8 @@ the dashboard API as the fallback while the socket is down.
 | --- | --- |
 | Package id | `io.github.osc-flow-studio.livepix` |
 | Block and config id | `livepix` |
-| OSC Flow Studio | `>=0.5.4 <0.6.0` (native date fields) |
-| Runtime SDK | API 1 |
+| OSC Flow Studio | `>=1.0.0 <2.0.0` (plugin SDK 2) |
+| Runtime SDK | API 2, permissions `secrets`, network `any` |
 | Dashboard | [OSC-Flow-Studio/livepix-dashboard](https://github.com/OSC-Flow-Studio/livepix-dashboard) |
 
 The user guide that ships inside the ZIP, in Portuguese, is
