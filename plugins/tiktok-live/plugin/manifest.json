@@ -2,7 +2,7 @@
   "$schema": "../../../sdk/community-plugin-manifest.schema.json",
   "id": "tiktok-live",
   "name": "TikTok LIVE",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "packageId": "io.github.osc-flow-studio.tiktok-live",
   "engines": {
     "oscFlowStudio": ">=1.0.0 <2.0.0"

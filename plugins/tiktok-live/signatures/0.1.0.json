@@ -1,5 +1,5 @@
 {
   "keyId": "osc-flow-studio-2026-10",
-  "payload": "{\"type\":\"osc-flow-studio.package-attestation\",\"publisher\":\"osc-flow-studio\",\"packageId\":\"io.github.osc-flow-studio.tiktok-live\",\"version\":\"0.1.0\",\"sha256\":\"f3ae2999fd87c5e28bbca4a3f21f32542ce550800bd71503a399f9b375acd15f\",\"size\":474042}",
-  "signature": "wUJI3dLsdjCgs04AQZNZ0qF5D8d/YquKdVAd0kkwiRmUl4t0ZhFf3qtHnnya35rlHblNHOzUP2PSk6mBhyEwCQ=="
+  "payload": "{\"type\":\"osc-flow-studio.package-attestation\",\"publisher\":\"osc-flow-studio\",\"packageId\":\"io.github.osc-flow-studio.tiktok-live\",\"version\":\"0.1.0\",\"sha256\":\"6dd6a9b8c47f00f2696336e92287d86566462a9c04b7cb2b043e360c82fedf70\",\"size\":477146}",
+  "signature": "/kn0QtuZ5AiVr/1iGdlRQJiHg2xeW2i6EH0OV0tMuVTf55Gjxd6fM3DatPbVbNz/Sumk3Nu5xDTpkWvkVd/MCA=="
 }
