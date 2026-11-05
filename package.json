@@ -21,7 +21,10 @@
     "catalog": "node scripts/build-catalog.mjs",
     "release": "node scripts/release-plugin.mjs",
     "sign": "node scripts/sign.mjs",
-    "keygen": "node scripts/keygen.mjs"
+    "keygen": "node scripts/keygen.mjs",
+    "bundle:tiktok-live": "npm --prefix plugins/tiktok-live/build ci && node plugins/tiktok-live/build/bundle.mjs",
+    "manifest:tiktok-live": "node plugins/tiktok-live/build/manifest.mjs",
+    "site:tiktok-live": "node plugins/tiktok-live/build/site.mjs"
   },
   "devDependencies": {
     "@clack/prompts": "1.8.1",

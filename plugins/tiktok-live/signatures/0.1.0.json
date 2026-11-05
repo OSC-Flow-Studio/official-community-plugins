@@ -1,0 +1,5 @@
+{
+  "keyId": "osc-flow-studio-2026-10",
+  "payload": "{\"type\":\"osc-flow-studio.package-attestation\",\"publisher\":\"osc-flow-studio\",\"packageId\":\"io.github.osc-flow-studio.tiktok-live\",\"version\":\"0.1.0\",\"sha256\":\"f3ae2999fd87c5e28bbca4a3f21f32542ce550800bd71503a399f9b375acd15f\",\"size\":474042}",
+  "signature": "wUJI3dLsdjCgs04AQZNZ0qF5D8d/YquKdVAd0kkwiRmUl4t0ZhFf3qtHnnya35rlHblNHOzUP2PSk6mBhyEwCQ=="
+}

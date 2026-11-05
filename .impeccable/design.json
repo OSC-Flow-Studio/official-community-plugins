@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T17:04:30.400Z",
+  "title": "Design System: OSC Flow Studio community plugins",
+  "extensions": {
+    "colorMeta": {
+      "host-pink": {
+        "role": "primary",
+        "displayName": "Host Pink",
+        "canonical": "oklch(0.56 0.21 358)",
+        "tonalRamp": [
+          "oklch(0.15 0.109 358)",
+          "oklch(0.25 0.134 358)",
+          "oklch(0.35 0.160 358)",
+          "oklch(0.48 0.192 358)",
+          "oklch(0.6 0.197 358)",
+          "oklch(0.72 0.167 358)",
+          "oklch(0.85 0.134 358)",
+          "oklch(0.95 0.109 358)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(0.985 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.48 0 0)",
+          "oklch(0.6 0 0)",
+          "oklch(0.72 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "oklch(0.155 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.48 0 0)",
+          "oklch(0.6 0 0)",
+          "oklch(0.72 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "rival-grey": {
+        "role": "neutral",
+        "displayName": "Rival Grey",
+        "canonical": "oklch(0.6 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.48 0 0)",
+          "oklch(0.6 0 0)",
+          "oklch(0.72 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "notice-amber": {
+        "role": "tertiary",
+        "displayName": "Notice Amber",
+        "canonical": "oklch(0.96 0.05 85)",
+        "tonalRamp": [
+          "oklch(0.15 0.062 85)",
+          "oklch(0.25 0.077 85)",
+          "oklch(0.35 0.091 85)",
+          "oklch(0.48 0.110 85)",
+          "oklch(0.6 0.113 85)",
+          "oklch(0.72 0.096 85)",
+          "oklch(0.85 0.077 85)",
+          "oklch(0.95 0.062 85)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The hero headline only."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Field names, values and scores, exactly as a flow spells them."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-lift",
+        "value": "0 1px 2px oklch(0.2 0 0 / 0.05), 0 12px 32px -12px oklch(0.2 0 0 / 0.12)",
+        "purpose": "The one raised data panel and the Studio screenshot."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every state transition."
+      },
+      {
+        "name": "scroll-score",
+        "value": "GSAP ScrollTrigger over the whole page",
+        "purpose": "The board fills with reading progress; static with reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "560px"
+      },
+      {
+        "name": "stack",
+        "value": "860px"
+      },
+      {
+        "name": "wide",
+        "value": "1080px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action that matters, with its icon in a tinted square.",
+      "html": "<button class=\"ds-btn-primary\">Copy catalog URL <span class=\"ds-btn-icon\"></span></button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:12px;height:48px;padding:0 8px 0 20px;border:0;border-radius:10px;background:oklch(0.56 0.21 358);color:oklch(0.99 0 0);font:600 16px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:transform 160ms cubic-bezier(0.16,1,0.3,1)}.ds-btn-primary:hover{background:oklch(0.5 0.19 358)}.ds-btn-primary:focus-visible{outline:2px solid oklch(0.56 0.21 358);outline-offset:3px}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-icon{width:32px;height:32px;border-radius:8px;background:oklch(0.99 0 0 / 0.16)}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "A secondary link styled as a button.",
+      "html": "<a class=\"ds-btn-quiet\" href=\"#\">Read the setup guide</a>",
+      "css": ".ds-btn-quiet{display:inline-flex;align-items:center;height:48px;padding:0 20px;border:1px solid oklch(0.82 0 0);border-radius:10px;color:oklch(0.2 0 0);font:600 16px/1 Inter,system-ui,sans-serif;text-decoration:none}.ds-btn-quiet:hover{border-color:oklch(0.2 0 0)}.ds-btn-quiet:focus-visible{outline:2px solid oklch(0.56 0.21 358);outline-offset:3px}"
+    },
+    {
+      "name": "Field Chip",
+      "kind": "chip",
+      "refersTo": "chip-field",
+      "description": "A field name a flow reads.",
+      "html": "<code class=\"ds-chip\">isReturning</code>",
+      "css": ".ds-chip{padding:4px 8px;border-radius:6px;background:oklch(0.965 0 0);color:oklch(0.2 0 0);font:12px/1.4 \"JetBrains Mono\", ui-monospace, monospace}"
+    },
+    {
+      "name": "Event Panel",
+      "kind": "card",
+      "refersTo": "panel-event",
+      "description": "Trigger fields as rows of name and value.",
+      "html": "<dl class=\"ds-event\"><div><dt>metadata.coins</dt><dd>120</dd></div><div><dt>metadata.senderRank</dt><dd>2</dd></div></dl>",
+      "css": ".ds-event{margin:0;padding:20px 22px;border:1px solid oklch(0.9 0 0);border-radius:14px;background:oklch(1 0 0);box-shadow:0 1px 2px oklch(0.2 0 0 / 0.05),0 12px 32px -12px oklch(0.2 0 0 / 0.12)}.ds-event div{display:flex;justify-content:space-between;padding:7px 0;border-top:1px dashed oklch(0.9 0 0)}.ds-event div:first-child{border-top:0}.ds-event dt{font:13px \"JetBrains Mono\", ui-monospace, monospace;color:oklch(0.46 0 0)}.ds-event dd{margin:0;font:500 14px \"JetBrains Mono\", ui-monospace, monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Battle Board",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "An example score that fills with reading progress.",
+      "html": "<div class=\"ds-board\"><b>1 240</b><span class=\"ds-bar\"><i style=\"flex-grow:58\"></i><s style=\"flex-grow:42\"></s></span><em>880</em></div>",
+      "css": ".ds-board{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font:600 15px \"JetBrains Mono\", ui-monospace, monospace}.ds-board b{color:oklch(0.56 0.21 358)}.ds-board em{font-style:normal;color:oklch(0.46 0 0)}.ds-bar{display:flex;height:6px;border-radius:3px;overflow:hidden}.ds-bar i{background:oklch(0.56 0.21 358)}.ds-bar s{background:oklch(0.6 0 0);opacity:.55}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Studio's own instrument panel",
+    "overview": "Plugin pages look like they came out of OSC Flow Studio: neutral greys, Inter, and one accent per plugin, the same accent the catalog gives it. Data is shown as data, in a monospace face with tabular numbers.",
+    "keyCharacteristics": [
+      "Neutral ground, one plugin accent, light and dark from the system.",
+      "Field names and numbers in JetBrains Mono.",
+      "Hairline dividers instead of card grids.",
+      "No third-party logos or brand colours."
+    ],
+    "rules": [
+      {
+        "name": "The Host Rule",
+        "body": "Pink marks the streamer's side or the one action that matters; it never decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Field Rule",
+        "body": "Anything a flow reads is set in the data face, exactly as the flow spells it.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do show real field names and label example values as examples.",
+      "Do credit third-party software with links.",
+      "Do keep every page complete with motion off and in both colour schemes."
+    ],
+    "donts": [
+      "Don't use TikTok's logo, stylised name or brand colours.",
+      "Don't put an eyebrow label above a heading, or number sections.",
+      "Don't use em or en dashes in page copy.",
+      "Don't build fake product UI from divs."
+    ]
+  }
+}

@@ -1,0 +1,459 @@
+{
+  "source": "Captured from two public TikTok LIVE rooms on 2026-11-05 with tiktok-live-connector 2.5.0, then reduced to the fields the plugin reads. Users, ids, avatars and comments are replaced.",
+  "messages": [
+    {
+      "type": "WebcastChatMessage",
+      "data": {
+        "common": {
+          "method": "WebcastChatMessage",
+          "msgId": "7704700645781506823",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890417141"
+        },
+        "user": {
+          "id": "7000000000000000001",
+          "nickname": "Viewer 1",
+          "displayId": "viewer_1",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/1.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "content": "hello from the room",
+        "userIdentity": {
+          "isGiftGiverOfAnchor": false,
+          "isSubscriberOfAnchor": false,
+          "isMutualFollowingWithAnchor": false,
+          "isFollowerOfAnchor": false,
+          "isModeratorOfAnchor": false,
+          "isAnchor": false
+        }
+      }
+    },
+    {
+      "type": "WebcastMemberMessage",
+      "data": {
+        "common": {
+          "method": "WebcastMemberMessage",
+          "msgId": "7704702013156133653",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890729276",
+          "displayText": {
+            "key": "live_room_enter_toast",
+            "defaultPattern": "{0:user} joined"
+          }
+        },
+        "user": {
+          "id": "7000000000000000002",
+          "nickname": "Viewer 2",
+          "displayId": "viewer_2",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/2.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "action": 1,
+        "memberCount": 461
+      }
+    },
+    {
+      "type": "WebcastLikeMessage",
+      "data": {
+        "common": {
+          "method": "WebcastLikeMessage",
+          "msgId": "7704702032163275809",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890734167",
+          "displayText": {
+            "key": "pm_mt_msg_viewer",
+            "defaultPattern": "{0:user} liked the LIVE"
+          }
+        },
+        "user": {
+          "id": "7000000000000000003",
+          "nickname": "Viewer 3",
+          "displayId": "viewer_3",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/3.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "1"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "count": 1,
+        "total": "40144"
+      }
+    },
+    {
+      "type": "WebcastSocialMessage",
+      "data": {
+        "common": {
+          "method": "WebcastSocialMessage",
+          "msgId": "7704702760188398367",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890906560",
+          "displayText": {
+            "key": "pm_mt_guidance_share",
+            "defaultPattern": "{0:user} shared the LIVE"
+          }
+        },
+        "user": {
+          "id": "7000000000000000004",
+          "nickname": "Viewer 4",
+          "displayId": "viewer_4",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/4.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "action": "3",
+        "shareType": "0",
+        "followCount": "0"
+      }
+    },
+    {
+      "type": "WebcastSocialMessage",
+      "data": {
+        "common": {
+          "method": "WebcastSocialMessage",
+          "msgId": "7704702782770891526",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890908550",
+          "displayText": {
+            "key": "pm_main_follow_message_viewer_2",
+            "defaultPattern": "{0:user} followed the LIVE creator"
+          }
+        },
+        "user": {
+          "id": "7000000000000000005",
+          "nickname": "Viewer 5",
+          "displayId": "viewer_5",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/5.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "action": "1",
+        "shareType": "0",
+        "followCount": "1555629"
+      }
+    },
+    {
+      "type": "WebcastSocialMessage",
+      "data": {
+        "common": {
+          "method": "WebcastSocialMessage",
+          "msgId": "7704702760465435406",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890912811",
+          "displayText": {
+            "key": "ttlive_repost_commentsArea_repostedUsername_im",
+            "defaultPattern": "{0:user} reposted"
+          }
+        },
+        "user": {
+          "id": "7000000000000000006",
+          "nickname": "Viewer 6",
+          "displayId": "viewer_6",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/6.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "1"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "action": "4",
+        "shareType": "0",
+        "followCount": "0"
+      }
+    },
+    {
+      "type": "WebcastGiftMessage",
+      "data": {
+        "common": {
+          "method": "WebcastGiftMessage",
+          "msgId": "7704703333508156167",
+          "roomId": "7700000000000000001",
+          "createTime": "1793891037437",
+          "displayText": {
+            "key": "webcast_aweme_gift_send_messageNew",
+            "defaultPattern": "{0:user} sent {1:gift} × {2:string}"
+          }
+        },
+        "user": {
+          "id": "7000000000000000007",
+          "nickname": "Viewer 7",
+          "displayId": "viewer_7",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/7.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        },
+        "giftId": "7934",
+        "repeatCount": 1,
+        "repeatEnd": 0,
+        "groupId": "0",
+        "comboCount": 1,
+        "isFirstSent": true,
+        "toMemberId": "",
+        "userIdentity": {
+          "isGiftGiverOfAnchor": true,
+          "isSubscriberOfAnchor": false,
+          "isMutualFollowingWithAnchor": false,
+          "isFollowerOfAnchor": true,
+          "isModeratorOfAnchor": false,
+          "isAnchor": false
+        },
+        "gift": {
+          "id": "7934",
+          "name": "Heart Me",
+          "type": 4,
+          "combo": false,
+          "diamondCount": 1,
+          "image": {
+            "urlList": [
+              "https://example.invalid/gift/heart-me.webp"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "WebcastRoomUserSeqMessage",
+      "data": {
+        "common": {
+          "method": "WebcastRoomUserSeqMessage",
+          "msgId": "7704702026759012630",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890732067"
+        },
+        "total": "460",
+        "totalUser": "62481",
+        "ranks": [
+          {
+            "score": "12",
+            "rank": "1",
+            "user": {
+              "id": "7000000000000000008",
+              "nickname": "Viewer 8",
+              "displayId": "viewer_8",
+              "avatarThumb": {
+                "urlList": [
+                  "https://example.invalid/avatar/8.webp"
+                ]
+              },
+              "followInfo": {
+                "followStatus": "0"
+              },
+              "payGrade": {
+                "level": 0
+              },
+              "fansClub": {
+                "data": {
+                  "level": 0
+                }
+              },
+              "userAttr": {
+                "isAdmin": false
+              },
+              "isSubscribe": false
+            }
+          },
+          {
+            "score": "11",
+            "rank": "2",
+            "user": {
+              "id": "7000000000000000009",
+              "nickname": "Viewer 9",
+              "displayId": "viewer_9",
+              "avatarThumb": {
+                "urlList": [
+                  "https://example.invalid/avatar/9.webp"
+                ]
+              },
+              "followInfo": {
+                "followStatus": "0"
+              },
+              "payGrade": {
+                "level": 0
+              },
+              "fansClub": {
+                "data": {
+                  "level": 0
+                }
+              },
+              "userAttr": {
+                "isAdmin": false
+              },
+              "isSubscribe": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "WebcastLiveIntroMessage",
+      "data": {
+        "common": {
+          "method": "WebcastLiveIntroMessage",
+          "msgId": "7613977330965056276",
+          "roomId": "0",
+          "createTime": "0"
+        },
+        "id": "7613977330965056276",
+        "content": "Intro text",
+        "user": {
+          "id": "7000000000000000010",
+          "nickname": "Viewer 10",
+          "displayId": "viewer_10",
+          "avatarThumb": {
+            "urlList": [
+              "https://example.invalid/avatar/10.webp"
+            ]
+          },
+          "followInfo": {
+            "followStatus": "0"
+          },
+          "payGrade": {
+            "level": 0
+          },
+          "fansClub": {
+            "data": {
+              "level": 0
+            }
+          },
+          "userAttr": {
+            "isAdmin": false
+          },
+          "isSubscribe": false
+        }
+      }
+    },
+    {
+      "type": "WebcastBarrageMessage",
+      "data": {
+        "common": {
+          "method": "WebcastBarrageMessage",
+          "msgId": "7704702604714197517",
+          "roomId": "7700000000000000001",
+          "createTime": "1793890867807"
+        },
+        "msgType": 9,
+        "content": {
+          "key": "pm_mt_alp_join_animation"
+        },
+        "commonBarrageContent": {
+          "key": "pm_mt_alp_join_animation_1New"
+        }
+      }
+    }
+  ]
+}

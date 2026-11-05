@@ -8,6 +8,7 @@ in the Studio; you install only the ones you want, and each one updates on its o
 | --- | --- | --- | --- |
 | LivePix | [plugins/livepix](plugins/livepix) | `io.github.osc-flow-studio.livepix` | `>=1.0.0 <2.0.0` |
 | Giggle Puck | [plugins/giggle-puck](plugins/giggle-puck) | `io.github.osc-flow-studio.giggle-puck` | `>=1.0.0 <2.0.0` |
+| TikTok LIVE | [plugins/tiktok-live](plugins/tiktok-live) | `io.github.osc-flow-studio.tiktok-live` | `>=1.0.0 <2.0.0` |
 
 ## Install a plugin
 
@@ -59,6 +60,12 @@ npm run catalog -- livepix    # dist/listing.json, a local preview
 Leave the plugin id out to act on every plugin. `npm run package` runs `npm run check`
 first.
 
+TikTok LIVE bundles an npm dependency, so it has a build tree of its own in
+`plugins/tiktok-live/build/`. `npm run bundle:tiktok-live` installs it and regenerates
+`plugin/vendor/`; `npm run manifest:tiktok-live` and `npm run site:tiktok-live` regenerate
+its manifest and landing page. The outputs are committed, so `npm run check` needs none of
+them; see [plugins/tiktok-live/README.md](plugins/tiktok-live/README.md).
+
 `npm run test:host-contract` runs each plugin's flows through the real Studio flow engine.
 It expects built `osc-flow-studio` and `catopanda-subathon` checkouts next to this
 repository; set `OSC_FLOW_STUDIO_ROOT` and `CATOPANDA_SUBATHON_ROOT` to point elsewhere.
@@ -75,6 +82,7 @@ lists them before the person agrees.
 |---|---|---|---|---|---|
 | livepix | yes | no | no | no | `any` (LivePix and the dashboard address you configure) |
 | giggle-puck | no | yes | yes | no | `local` (multicast DNS and OSC to the Pucks) |
+| tiktok-live | yes | yes | no | no | `any` (TikTok and Euler Stream, or the local TikFinity app) |
 
 The Studio cannot enforce `network`, so `npm run validate` does: a plugin whose code
 imports a socket module, or calls `fetch` or `WebSocket`, cannot declare `"none"`, and

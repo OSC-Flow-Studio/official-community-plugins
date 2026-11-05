@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TikTok LIVE for OSC Flow Studio</title>
+<meta name="description" content="Turn TikTok LIVE gifts, battles, joins and milestones into OSC Flow Studio triggers. An official community plugin; unofficial TikTok integration.">
+<meta name="color-scheme" content="light dark">
+<link rel="preload" href="assets/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="board" aria-label="Page progress, shown as an example battle score">
+  <div class="board-inner">
+    <a class="brand" href="#top">TikTok LIVE <span>for OSC Flow Studio</span></a>
+    <div class="score" aria-hidden="true">
+      <span class="side side-host"><span class="who">You</span><span class="pts" data-score="host">0</span></span>
+      <span class="bar"><span class="bar-host" data-bar="host"></span><span class="bar-rival" data-bar="rival"></span></span>
+      <span class="side side-rival"><span class="pts" data-score="rival">0</span><span class="who">Rival</span></span>
+    </div>
+    <nav class="rounds" aria-label="Sections">
+      <a href="#gifts" data-round="gifts">Gifts</a>
+      <a href="#audience" data-round="audience">Audience</a>
+      <a href="#battles" data-round="battles">Battles</a>
+      <a href="#install" data-round="install">Install</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="hero-copy">
+      <h1>Your TikTok LIVE, wired into your&nbsp;flows</h1>
+      <p class="sub">Gifts, battles, joins and milestones arrive in OSC Flow Studio as triggers, carrying each viewer's rank and coins.</p>
+      <div class="actions">
+        <button class="btn btn-primary" type="button" data-copy="{{CATALOG_URL}}"><span data-copy-label>Copy catalog URL</span><span class="btn-icon">{{ICON:copy}}</span></button>
+        <a class="btn btn-quiet" href="{{README_URL}}">Read the setup guide <span class="btn-icon">{{ICON:arrow-up-right}}</span></a>
+      </div>
+      <p class="copy-note" data-copy-note role="status" aria-live="polite"></p>
+    </div>
+    <figure class="event" aria-labelledby="event-caption">
+      <div class="event-head">
+        <span class="event-kind">{{ICON:gift}} TikTok: gift received</span>
+        <code class="event-type">trigger.x.tiktok-live.gift</code>
+      </div>
+      <dl class="fields">
+        <div><dt>actorDisplayName</dt><dd>Marisol</dd></div>
+        <div><dt>metadata.giftName</dt><dd>Rose</dd></div>
+        <div><dt>metadata.giftId</dt><dd class="num">5655</dd></div>
+        <div><dt>metadata.repeatCount</dt><dd class="num">120</dd></div>
+        <div><dt>metadata.coins</dt><dd class="num accent">120</dd></div>
+        <div><dt>metadata.senderRank</dt><dd class="num">2</dd></div>
+        <div><dt>metadata.senderSessionCoins</dt><dd class="num">1 340</dd></div>
+        <div><dt>metadata.isFirstGiftThisSession</dt><dd>false</dd></div>
+        <div><dt>metadata.followStatus</dt><dd>friend</dd></div>
+      </dl>
+      <figcaption id="event-caption">Example values. The field names are the real ones a flow reads.</figcaption>
+    </figure>
+  </section>
+
+  <section class="round round-gifts" id="gifts" data-round-section="gifts">
+    <div class="round-copy">
+      <h2>Match the gift, not its name</h2>
+      <p>Gift ids are the same in every language, so a flow made in Lisbon fires on a computer in Seoul. Pick a gift from the list the plugin learns as gifts arrive, or set a band of coins.</p>
+      <p>Streakable gifts count once, when the viewer stops tapping, with every tap inside. A separate streak trigger follows each tap for combos.</p>
+    </div>
+    <div class="streak" aria-label="A streak of Roses counted as one gift">
+      <div class="streak-taps" aria-hidden="true">{{STREAK_TAPS}}</div>
+      <div class="streak-readout">
+        <p><span class="label">gift-streak</span> <span class="mono">repeatCount</span> <strong class="num" data-streak-count>10</strong></p>
+        <p><span class="label">gift</span> <span class="mono">coins</span> <strong class="num accent" data-streak-coins>10</strong> <span class="when">once, when the streak ends</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="round round-audience" id="audience" data-round-section="audience">
+    <h2>More than an alert for every viewer</h2>
+    <div class="bento">
+      <article class="cell cell-wide cell-tint">
+        <h3>{{ICON:users}} Joins that remember</h3>
+        <p>Know a first visit from a viewer who came back from an earlier LIVE.</p>
+        <p class="chips"><code>isFirstJoin</code> <code>isReturning</code> <code>userJoins</code></p>
+      </article>
+      <article class="cell">
+        <h3>{{ICON:heart}} Follows and shares</h3>
+        <p>One follow per viewer per session, even when they unfollow and follow again.</p>
+        <p class="chips"><code>isFirstFollowThisSession</code></p>
+      </article>
+      <article class="cell cell-tall cell-accent">
+        <h3>{{ICON:flame}} Milestones</h3>
+        <p>Every 1 000 likes, every 500 coins, every 50 viewers, or the steps you choose. A late join does not fire the ones already passed.</p>
+        <p class="chips"><code>like-milestone</code> <code>coin-milestone</code> <code>viewer-count</code></p>
+      </article>
+      <article class="cell cell-wide">
+        <h3>{{ICON:message-square}} Chat commands</h3>
+        <p>!dance fast arrives split into the command and its arguments.</p>
+        <p class="chips"><code>command</code> <code>args</code></p>
+      </article>
+      <article class="cell cell-wide">
+        <h3>{{ICON:coins}} A ranking that updates itself</h3>
+        <p>Each gift carries the sender's place and total. Another trigger fires when the top three changes hands.</p>
+        <p class="chips"><code>senderRank</code> <code>top-gifter-change</code> <code>top-gifters</code></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="round round-battles" id="battles" data-round-section="battles">
+    <div class="battle-pin">
+      <div class="battle-copy">
+        <h2>Battles, scored from your side</h2>
+        <p>The battle trigger fires when a battle starts, when the score moves, when the lead changes hands and when it ends, with the result from the streamer's point of view.</p>
+      </div>
+      <ol class="phases" aria-label="The phases of one example battle">
+        <li data-phase="start"><span class="phase-name mono">start</span><span class="phase-score"><span class="num">0</span> <span class="vs">to</span> <span class="num">0</span></span><span class="phase-note">against @rival_creator</span></li>
+        <li data-phase="update"><span class="phase-name mono">update</span><span class="phase-score"><span class="num">40</span> <span class="vs">to</span> <span class="num">310</span></span><span class="phase-note">leader: opponent</span></li>
+        <li data-phase="lead-change"><span class="phase-name mono">lead-change</span><span class="phase-score"><span class="num">720</span> <span class="vs">to</span> <span class="num">650</span></span><span class="phase-note">leader: host</span></li>
+        <li data-phase="end"><span class="phase-name mono">end</span><span class="phase-score"><span class="num accent">1 240</span> <span class="vs">to</span> <span class="num">880</span></span><span class="phase-note">result: win</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="catalogue" aria-labelledby="catalogue-title">
+    <h2 id="catalogue-title">{{TRIGGER_COUNT}} triggers, {{ACTION_COUNT}} actions and {{INPUT_COUNT}} inputs</h2>
+    <p class="catalogue-sub">All of them in one TikTok LIVE group of the block palette.</p>
+    <figure class="studio">
+      <picture>
+        <source srcset="assets/studio-editor-dark.webp" media="(prefers-color-scheme: dark)">
+        <img src="assets/studio-editor-light.webp" width="1296" height="858" loading="lazy" decoding="async" alt="The OSC Flow Studio flow editor: the TikTok LIVE group open in the block palette with 41 blocks, a flow of TikTok triggers on the canvas, and the gift trigger's settings with the gift picker and coin range.">
+      </picture>
+      <figcaption>The plugin in the OSC Flow Studio flow editor, with a flow of TikTok triggers and the gift trigger's settings.</figcaption>
+    </figure>
+    <div class="catalogue-grid">{{CATALOGUE}}</div>
+  </section>
+
+  <section class="install" id="install" data-round-section="install">
+    <h2>Install it from the catalog</h2>
+    <ol class="install-steps">
+      <li><h3>Add the catalog</h3><p>In OSC Flow Studio, open Integrations, then Sources, and paste the catalog URL.</p><p class="url"><code>{{CATALOG_URL}}</code></p></li>
+      <li><h3>Install TikTok LIVE</h3><p>Open Catalog, pick TikTok LIVE and review what it asks for: network access, the vault and the gift list.</p></li>
+      <li><h3>Type the username</h3><p>Under General, enter the @handle that goes live. The plugin waits while it is offline and connects when the LIVE starts.</p></li>
+    </ol>
+    <button class="btn btn-primary btn-large" type="button" data-copy="{{CATALOG_URL}}"><span data-copy-label>Copy catalog URL</span><span class="btn-icon">{{ICON:copy}}</span></button>
+    <div class="transports">
+      <div>
+        <h3>{{ICON:plug}} Direct connection</h3>
+        <p>The plugin connects to TikTok itself, with signatures from Euler Stream. A free Euler key raises the connection limit; the full gift list and sending chat need paid plans.</p>
+      </div>
+      <div>
+        <h3>{{ICON:radio-tower}} TikFinity bridge</h3>
+        <p>When TikFinity already runs on this computer, the plugin can listen to its local connection instead and needs nothing from Euler Stream.</p>
+      </div>
+    </div>
+    <p class="beta"><strong>Sending chat is BETA.</strong> It is off by default, can be switched off by the maintainers at any time, and TikTok may suspend accounts that post automatically.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-inner">
+    <p class="unofficial">Unofficial integration. TikTok has no public API for LIVE events; this plugin reads the same events LIVE alert tools read, and is not affiliated with TikTok, Euler Stream or TikFinity.</p>
+    <div class="credits">
+      <h2>Built on</h2>
+      <ul>{{CREDITS}}</ul>
+    </div>
+    <p class="legal">TikTok LIVE {{VERSION}} is licensed AGPL-3.0. <a href="{{SOURCE_URL}}">Source code</a> · <a href="{{CHANGELOG_URL}}">Changelog</a></p>
+  </div>
+</footer>
+<script src="main.js" defer></script>
+</body>
+</html>

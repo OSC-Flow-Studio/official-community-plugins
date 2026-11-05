@@ -1,0 +1,4870 @@
+{
+  "$schema": "../../../sdk/community-plugin-manifest.schema.json",
+  "id": "tiktok-live",
+  "name": "TikTok LIVE",
+  "version": "0.1.0",
+  "packageId": "io.github.osc-flow-studio.tiktok-live",
+  "engines": {
+    "oscFlowStudio": ">=1.0.0 <2.0.0"
+  },
+  "author": {
+    "name": "OSC Flow Studio",
+    "url": "https://github.com/OSC-Flow-Studio"
+  },
+  "license": "AGPL-3.0-only",
+  "repository": "https://github.com/OSC-Flow-Studio/official-community-plugins",
+  "homepage": "https://github.com/OSC-Flow-Studio/official-community-plugins/tree/main/plugins/tiktok-live#readme",
+  "changelogUrl": "https://github.com/OSC-Flow-Studio/official-community-plugins/blob/main/plugins/tiktok-live/CHANGELOG.md",
+  "description": "Turns your TikTok LIVE into flow triggers: gifts by coins or by gift, battles, joins, follows, likes, chat and milestones, plus inputs about the stream. Unofficial; built on tiktok-live-connector 2.5.0, with a TikFinity bridge as an alternative.",
+  "capabilities": [
+    "triggers",
+    "actions",
+    "templates",
+    "secrets"
+  ],
+  "appearance": {
+    "icon": "gift",
+    "accent": "pink"
+  },
+  "entry": "index.mjs",
+  "apiVersion": 2,
+  "permissions": {
+    "secrets": true,
+    "resources": true,
+    "haptics": false,
+    "processes": false,
+    "network": "any"
+  },
+  "configSchema": {
+    "tabs": [
+      {
+        "id": "general",
+        "label": "General",
+        "description": "The LIVE to watch and how to reach it."
+      },
+      {
+        "id": "direct",
+        "label": "Direct connection",
+        "description": "Connecting to TikTok through Euler Stream's signing service."
+      },
+      {
+        "id": "tikfinity",
+        "label": "TikFinity",
+        "description": "Listening to the TikFinity desktop app instead."
+      },
+      {
+        "id": "chat",
+        "label": "Chat (BETA)",
+        "description": "Sending chat messages. Unstable and off by default."
+      },
+      {
+        "id": "advanced",
+        "label": "Advanced",
+        "description": "Gift streaks, milestones and other events."
+      },
+      {
+        "id": "about",
+        "label": "About",
+        "description": "Third-party software this plugin is built on."
+      }
+    ],
+    "fields": [
+      {
+        "key": "enabled",
+        "type": "boolean",
+        "label": "Plugin enabled",
+        "description": "Watches the LIVE while OSC Flow Studio is open.",
+        "tab": "general",
+        "default": true
+      },
+      {
+        "key": "uniqueId",
+        "type": "string",
+        "label": "TikTok username",
+        "description": "The @handle of the account that goes live, with or without the @. The plugin waits when it is offline and connects when the LIVE starts.",
+        "tab": "general",
+        "default": "",
+        "pattern": "^\\s*@?[A-Za-z0-9_.]{2,24}\\s*$|^$"
+      },
+      {
+        "key": "transport",
+        "type": "select",
+        "label": "Connect through",
+        "description": "Direct connects to TikTok itself. TikFinity listens to the TikFinity app on this computer, which has to be open and connected to your LIVE.",
+        "tab": "general",
+        "default": "direct",
+        "options": [
+          {
+            "value": "direct",
+            "label": "Direct connection"
+          },
+          {
+            "value": "tikfinity",
+            "label": "TikFinity app"
+          }
+        ]
+      },
+      {
+        "key": "resetOnStreamStart",
+        "type": "boolean",
+        "label": "Reset per stream",
+        "description": "Starts the session counters (coins, likes, gifters, milestones) over when a new LIVE starts.",
+        "tab": "general",
+        "default": true
+      },
+      {
+        "key": "commandPrefix",
+        "type": "string",
+        "label": "Command prefix",
+        "description": "Chat messages that start with this are also chat commands.",
+        "tab": "general",
+        "default": "!",
+        "pattern": "^\\S{1,3}$"
+      },
+      {
+        "key": "directSection",
+        "type": "separator",
+        "label": "Euler Stream signing",
+        "description": "TikTok only accepts signed connections, and the direct connection gets its signatures from Euler Stream. Without a key it shares Euler's free anonymous limit, which can make connecting wait a few minutes. A free key at eulerstream.com raises it; the gift list and sending chat need paid plans.",
+        "tab": "direct"
+      },
+      {
+        "key": "signApiKey",
+        "type": "secret",
+        "label": "Euler Stream API key",
+        "description": "Optional. Kept in the Studio's encrypted vault and sent only to Euler Stream.",
+        "tab": "direct"
+      },
+      {
+        "key": "reconnectMinSeconds",
+        "type": "number",
+        "label": "First retry after (seconds)",
+        "description": "When the connection drops, the plugin waits this long, then twice as long after each failure.",
+        "tab": "direct",
+        "default": 5,
+        "min": 2,
+        "max": 60
+      },
+      {
+        "key": "reconnectMaxSeconds",
+        "type": "number",
+        "label": "Longest wait between retries (seconds)",
+        "description": "Waits after a rate limit are never shorter than 60 seconds.",
+        "tab": "direct",
+        "default": 300,
+        "min": 30,
+        "max": 900
+      },
+      {
+        "key": "offlinePollSeconds",
+        "type": "number",
+        "label": "Check if live every (seconds)",
+        "description": "While the streamer is offline. These checks do not use Euler Stream's quota.",
+        "tab": "direct",
+        "default": 60,
+        "min": 30,
+        "max": 600
+      },
+      {
+        "key": "tikfinitySection",
+        "type": "separator",
+        "label": "TikFinity bridge",
+        "description": "Open TikFinity on this computer, connect it to your LIVE, and pick TikFinity app under General. Gifts, chat, likes, follows, shares, joins, subscriptions and battles arrive through it; the gift list, live checks and sending chat do not.",
+        "tab": "tikfinity"
+      },
+      {
+        "key": "bridgeUrl",
+        "type": "string",
+        "label": "TikFinity address",
+        "description": "TikFinity's local WebSocket. Change it only if TikFinity tells you a different one.",
+        "tab": "tikfinity",
+        "default": "ws://localhost:21213/",
+        "pattern": "^wss?://[^\\s/]+(/[^\\s]*)?$"
+      },
+      {
+        "key": "chatSection",
+        "type": "separator",
+        "label": "Sending chat is BETA",
+        "description": "It may stop working or be switched off by the plugin maintainers at any time. TikTok may suspend accounts that post automatically: use a secondary account. It needs the direct connection and an Euler Stream key on a plan that includes chat.",
+        "tab": "chat"
+      },
+      {
+        "key": "chatEnabled",
+        "type": "boolean",
+        "label": "Chat (BETA) enabled",
+        "description": "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which opens a page in your browser.",
+        "tab": "chat",
+        "default": false
+      },
+      {
+        "key": "giftStreakMode",
+        "type": "select",
+        "label": "Count streakable gifts",
+        "description": "When a viewer taps a Rose 10 times, gift received fires once with 10, or ten times with 1.",
+        "tab": "advanced",
+        "default": "completed",
+        "options": [
+          {
+            "value": "completed",
+            "label": "Once, when the streak ends"
+          },
+          {
+            "value": "each",
+            "label": "On every tap"
+          }
+        ]
+      },
+      {
+        "key": "coinMilestoneStep",
+        "type": "number",
+        "label": "Session coin milestone every",
+        "description": "Coins. 0 turns session coin milestones off.",
+        "tab": "advanced",
+        "default": 500,
+        "min": 0,
+        "max": 1000000
+      },
+      {
+        "key": "gifterMilestoneStep",
+        "type": "number",
+        "label": "Viewer coin milestone every",
+        "description": "Coins from one viewer. 0 turns them off.",
+        "tab": "advanced",
+        "default": 100,
+        "min": 0,
+        "max": 1000000
+      },
+      {
+        "key": "likeMilestoneStep",
+        "type": "number",
+        "label": "Like milestone every",
+        "description": "Likes on the LIVE's total. 0 turns them off.",
+        "tab": "advanced",
+        "default": 1000,
+        "min": 0,
+        "max": 10000000
+      },
+      {
+        "key": "viewerMilestoneStep",
+        "type": "number",
+        "label": "Viewer milestone every",
+        "description": "Viewers. 0 turns them off.",
+        "tab": "advanced",
+        "default": 50,
+        "min": 0,
+        "max": 100000
+      },
+      {
+        "key": "processInitialData",
+        "type": "boolean",
+        "label": "Replay recent messages on connect",
+        "description": "TikTok sends a few recent messages when the plugin connects. Off ignores them, so a reconnect does not fire old events again.",
+        "tab": "advanced",
+        "default": false
+      },
+      {
+        "key": "emitRawEvents",
+        "type": "boolean",
+        "label": "Pass other events",
+        "description": "Fires TikTok: other TikTok event for every message type the plugin does not handle itself. For experiments; it can fire often.",
+        "tab": "advanced",
+        "default": false
+      },
+      {
+        "key": "aboutUnofficial",
+        "type": "separator",
+        "label": "Unofficial integration",
+        "description": "TikTok has no public API for LIVE events. This plugin reads the same events every LIVE alert tool reads, and is not affiliated with TikTok, Euler Stream or TikFinity.",
+        "tab": "about"
+      },
+      {
+        "key": "aboutConnector",
+        "type": "separator",
+        "label": "tiktok-live-connector 2.5.0",
+        "description": "The TikTok client the direct connection uses, by zerodytrash. AGPL-3.0 with additional permissions. https://github.com/zerodytrash/TikTok-Live-Connector",
+        "tab": "about"
+      },
+      {
+        "key": "aboutProto",
+        "type": "separator",
+        "label": "tiktok-live-proto",
+        "description": "TikTok's message definitions, by isaackogan. AGPL-3.0 with additional permissions. https://github.com/isaackogan/TikTok-Webcast-Protobuf",
+        "tab": "about"
+      },
+      {
+        "key": "aboutEuler",
+        "type": "separator",
+        "label": "Euler Stream",
+        "description": "The signing service behind the direct connection. https://www.eulerstream.com",
+        "tab": "about"
+      },
+      {
+        "key": "aboutTikfinity",
+        "type": "separator",
+        "label": "TikFinity",
+        "description": "The desktop app behind the TikFinity bridge, not bundled. https://tikfinity.zerody.one",
+        "tab": "about"
+      },
+      {
+        "key": "aboutNotice",
+        "type": "separator",
+        "label": "Licenses",
+        "description": "Every bundled package and its license is listed in vendor/NOTICE.md inside the plugin, with full texts in vendor/THIRD_PARTY_LICENSES.txt. Source: https://github.com/OSC-Flow-Studio/official-community-plugins/tree/main/plugins/tiktok-live",
+        "tab": "about"
+      }
+    ]
+  },
+  "nodeTypes": [
+    {
+      "type": "trigger.x.tiktok-live.gift",
+      "label": "TikTok: gift received",
+      "category": "TikTok LIVE",
+      "description": "A viewer sent a gift. Streakable gifts (the Rose and others you can tap repeatedly) count once, when the streak ends, with every tap in it. Pick a gift, or set a coin range, to react to specific gifts.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "gift"
+      },
+      "matchFields": [
+        {
+          "nodeField": "giftId",
+          "eventField": "giftId",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "giftIdManual",
+          "eventField": "giftId",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "minCoins",
+          "eventField": "coins",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "maxCoins",
+          "eventField": "coins",
+          "mode": "lte"
+        },
+        {
+          "nodeField": "minDiamondsPerGift",
+          "eventField": "diamondsPerGift",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "streakable",
+          "eventField": "streakable",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "toHostOnly",
+          "eventField": "isToHost",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "firstGiftOnly",
+          "eventField": "isFirstGiftThisSession",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "giftId",
+          "label": "Gift",
+          "kind": "resource-select",
+          "resourceKey": "gifts",
+          "optional": true,
+          "helpText": "Gifts appear here as the plugin sees them. Empty accepts every gift."
+        },
+        {
+          "key": "giftIdManual",
+          "label": "Gift id",
+          "kind": "number",
+          "min": 0,
+          "optional": true,
+          "helpText": "For a gift not in the list yet. Find ids with TikTok: gift lookup, or in metadata.giftId of an earlier gift."
+        },
+        {
+          "key": "minCoins",
+          "label": "Coins at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Coins of the whole gift (coins per gift times the count). 0 accepts any amount."
+        },
+        {
+          "key": "maxCoins",
+          "label": "Coins at most",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Empty accepts any amount. Use with Coins at least to make bands.",
+          "optional": true
+        },
+        {
+          "key": "minDiamondsPerGift",
+          "label": "Coins per gift at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Filters by the gift's own price, whatever the count. 0 accepts any gift."
+        },
+        {
+          "key": "streakable",
+          "label": "Streakable gift",
+          "kind": "select",
+          "helpText": "Gifts that can be tapped repeatedly, like the Rose.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        },
+        {
+          "key": "toHostOnly",
+          "label": "Sent to the streamer",
+          "kind": "select",
+          "helpText": "In multi-guest LIVEs gifts can go to a guest. Yes keeps only gifts to the streamer.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "To a guest"
+            }
+          ]
+        },
+        {
+          "key": "firstGiftOnly",
+          "label": "First gift of this viewer",
+          "kind": "select",
+          "helpText": "Yes fires only on a viewer's first gift of the session.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "giftId": "",
+        "minCoins": 0,
+        "minDiamondsPerGift": 0,
+        "streakable": "",
+        "toHostOnly": "",
+        "firstGiftOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.giftId",
+          "type": "number",
+          "description": "TikTok's id of the gift. The same in every language; match on this, not on the name."
+        },
+        {
+          "path": "metadata.giftName",
+          "type": "string",
+          "description": "The gift's English name, for messages only."
+        },
+        {
+          "path": "metadata.giftType",
+          "type": "number",
+          "description": "TikTok's gift type; 1 is streakable."
+        },
+        {
+          "path": "metadata.streakable",
+          "type": "boolean",
+          "description": "True for gifts that can be tapped repeatedly."
+        },
+        {
+          "path": "metadata.diamondsPerGift",
+          "type": "number",
+          "description": "Coins one of these gifts costs."
+        },
+        {
+          "path": "metadata.repeatCount",
+          "type": "number",
+          "description": "How many were sent: the streak length, or 1."
+        },
+        {
+          "path": "metadata.coins",
+          "type": "number",
+          "description": "Coins of the whole gift: coins per gift times the count."
+        },
+        {
+          "path": "metadata.giftImageUrl",
+          "type": "string",
+          "description": "Link to the gift's picture."
+        },
+        {
+          "path": "metadata.receiverUserId",
+          "type": "string",
+          "description": "Who received it in a multi-guest LIVE; empty for the streamer."
+        },
+        {
+          "path": "metadata.isToHost",
+          "type": "boolean",
+          "description": "True when the streamer received the gift."
+        },
+        {
+          "path": "metadata.isFirstGiftThisSession",
+          "type": "boolean",
+          "description": "True on the viewer's first gift of the session."
+        },
+        {
+          "path": "metadata.senderSessionCoins",
+          "type": "number",
+          "description": "Coins this viewer has sent this session, this gift included."
+        },
+        {
+          "path": "metadata.senderRank",
+          "type": "number",
+          "description": "This viewer's place among the session's gifters after this gift."
+        },
+        {
+          "path": "metadata.sessionCoins",
+          "type": "number",
+          "description": "Coins received this session, this gift included."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.gift-streak",
+      "label": "TikTok: gift streak",
+      "category": "TikTok LIVE",
+      "description": "Every tap of a streakable gift while the viewer keeps sending, then once more when the streak ends. For counters and combos; use gift received to count coins.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "flame"
+      },
+      "matchFields": [
+        {
+          "nodeField": "phase",
+          "eventField": "phase",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "giftId",
+          "eventField": "giftId",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "minRepeat",
+          "eventField": "repeatCount",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "phase",
+          "label": "Phase",
+          "kind": "select",
+          "helpText": "progress fires on each tap, end once when the streak is over.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "progress",
+              "label": "Each tap"
+            },
+            {
+              "value": "end",
+              "label": "Streak ended"
+            }
+          ]
+        },
+        {
+          "key": "giftId",
+          "label": "Gift",
+          "kind": "resource-select",
+          "resourceKey": "gifts",
+          "optional": true,
+          "helpText": "Empty accepts every streakable gift."
+        },
+        {
+          "key": "minRepeat",
+          "label": "Count at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "The streak's count so far. 0 accepts any."
+        }
+      ],
+      "defaultData": {
+        "phase": "",
+        "giftId": "",
+        "minRepeat": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.phase",
+          "type": "string",
+          "description": "progress or end."
+        },
+        {
+          "path": "metadata.giftId",
+          "type": "number",
+          "description": "TikTok's id of the gift."
+        },
+        {
+          "path": "metadata.giftName",
+          "type": "string",
+          "description": "The gift's English name, for messages only."
+        },
+        {
+          "path": "metadata.repeatCount",
+          "type": "number",
+          "description": "The streak's count so far."
+        },
+        {
+          "path": "metadata.diamondsPerGift",
+          "type": "number",
+          "description": "Coins one of these gifts costs."
+        },
+        {
+          "path": "metadata.coinsSoFar",
+          "type": "number",
+          "description": "Coins in the streak so far."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.coin-milestone",
+      "label": "TikTok: coin milestone",
+      "category": "TikTok LIVE",
+      "description": "Coins passed a round number: the session's total (every 500 coins by default) or one viewer's total (every 100). Steps are set under Advanced. A big gift that passes several milestones fires once for each.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "coins"
+      },
+      "matchFields": [
+        {
+          "nodeField": "scope",
+          "eventField": "scope",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "minMilestone",
+          "eventField": "milestone",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "scope",
+          "label": "Whose coins",
+          "kind": "select",
+          "helpText": "The session's total, or one viewer's.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "session",
+              "label": "Session total"
+            },
+            {
+              "value": "gifter",
+              "label": "One viewer"
+            }
+          ]
+        },
+        {
+          "key": "minMilestone",
+          "label": "Milestone at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts every milestone."
+        }
+      ],
+      "defaultData": {
+        "scope": "",
+        "minMilestone": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.scope",
+          "type": "string",
+          "description": "session or gifter."
+        },
+        {
+          "path": "metadata.milestone",
+          "type": "number",
+          "description": "The round number passed."
+        },
+        {
+          "path": "metadata.total",
+          "type": "number",
+          "description": "The total now."
+        },
+        {
+          "path": "metadata.step",
+          "type": "number",
+          "description": "The milestone step in use."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.top-gifter-change",
+      "label": "TikTok: top gifter changed",
+      "category": "TikTok LIVE",
+      "description": "Someone new holds first, second or third place among this session's gifters. The viewer fields describe the new holder.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "trophy"
+      },
+      "matchFields": [
+        {
+          "nodeField": "maxRank",
+          "eventField": "rank",
+          "mode": "lte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "maxRank",
+          "label": "Place at most",
+          "kind": "number",
+          "min": 0,
+          "helpText": "1 fires only for first place. 0 or 3 fires for the top three.",
+          "max": 3
+        }
+      ],
+      "defaultData": {
+        "maxRank": 1
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.rank",
+          "type": "number",
+          "description": "The place that changed hands: 1, 2 or 3."
+        },
+        {
+          "path": "metadata.previousUserId",
+          "type": "string",
+          "description": "Who held it before, or empty."
+        },
+        {
+          "path": "metadata.previousNickname",
+          "type": "string",
+          "description": "Display name of who held it before, or empty."
+        },
+        {
+          "path": "metadata.coins",
+          "type": "number",
+          "description": "The new holder's coins this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.envelope",
+      "label": "TikTok: treasure chest",
+      "category": "TikTok LIVE",
+      "description": "A viewer dropped a treasure chest (an envelope of coins for the audience).",
+      "role": "trigger",
+      "appearance": {
+        "icon": "box"
+      },
+      "matchFields": [
+        {
+          "nodeField": "minCoins",
+          "eventField": "coins",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minCoins",
+          "label": "Coins at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any chest."
+        }
+      ],
+      "defaultData": {
+        "minCoins": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.envelopeId",
+          "type": "string",
+          "description": "TikTok's id of the chest."
+        },
+        {
+          "path": "metadata.coins",
+          "type": "number",
+          "description": "Coins in the chest."
+        },
+        {
+          "path": "metadata.peopleCount",
+          "type": "number",
+          "description": "How many viewers can open it."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.member",
+      "label": "TikTok: viewer joined",
+      "category": "TikTok LIVE",
+      "description": "A viewer entered the LIVE. TikTok sends joins in samples on busy LIVEs, so not every entry arrives.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "users"
+      },
+      "matchFields": [
+        {
+          "nodeField": "followStatus",
+          "eventField": "followStatus",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "firstJoinOnly",
+          "eventField": "isFirstJoin",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "returningOnly",
+          "eventField": "isReturning",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "followStatus",
+          "label": "Relationship",
+          "kind": "select",
+          "helpText": "Who the viewer is to the streamer.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "none",
+              "label": "Not following"
+            },
+            {
+              "value": "follower",
+              "label": "Follower"
+            },
+            {
+              "value": "friend",
+              "label": "Friend (follows each other)"
+            }
+          ]
+        },
+        {
+          "key": "firstJoinOnly",
+          "label": "First time this session",
+          "kind": "select",
+          "helpText": "No fires on rejoins only.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        },
+        {
+          "key": "returningOnly",
+          "label": "Seen in an earlier LIVE",
+          "kind": "select",
+          "helpText": "Viewers the plugin remembers from your earlier LIVEs (the last 2000).",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "followStatus": "",
+        "firstJoinOnly": "",
+        "returningOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.isFirstJoin",
+          "type": "boolean",
+          "description": "True the first time this viewer joins this session."
+        },
+        {
+          "path": "metadata.isReturning",
+          "type": "boolean",
+          "description": "True when the plugin saw this viewer in one of your earlier LIVEs."
+        },
+        {
+          "path": "metadata.userJoins",
+          "type": "number",
+          "description": "How often this viewer has joined this session."
+        },
+        {
+          "path": "metadata.joinsThisSession",
+          "type": "number",
+          "description": "Joins seen this session."
+        },
+        {
+          "path": "metadata.viewerCount",
+          "type": "number",
+          "description": "Viewers in the LIVE right now."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.follow",
+      "label": "TikTok: new follower",
+      "category": "TikTok LIVE",
+      "description": "A viewer followed the streamer during the LIVE.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "heart"
+      },
+      "matchFields": [
+        {
+          "nodeField": "firstTimeOnly",
+          "eventField": "isFirstFollowThisSession",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "firstTimeOnly",
+          "label": "First follow this session",
+          "kind": "select",
+          "helpText": "Yes ignores the same viewer following again after unfollowing.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "firstTimeOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.isFirstFollowThisSession",
+          "type": "boolean",
+          "description": "False when the viewer already followed earlier in this session."
+        },
+        {
+          "path": "metadata.followsThisSession",
+          "type": "number",
+          "description": "Follows this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.share",
+      "label": "TikTok: LIVE shared",
+      "category": "TikTok LIVE",
+      "description": "A viewer shared the LIVE.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "send"
+      },
+      "matchFields": [
+        {
+          "nodeField": "followStatus",
+          "eventField": "followStatus",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "followStatus",
+          "label": "Relationship",
+          "kind": "select",
+          "helpText": "Who the viewer is to the streamer.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "none",
+              "label": "Not following"
+            },
+            {
+              "value": "follower",
+              "label": "Follower"
+            },
+            {
+              "value": "friend",
+              "label": "Friend (follows each other)"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "followStatus": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.sharesThisSession",
+          "type": "number",
+          "description": "Shares this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.subscribe",
+      "label": "TikTok: new subscriber",
+      "category": "TikTok LIVE",
+      "description": "A viewer subscribed to the streamer, or renewed.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "star"
+      },
+      "matchFields": [
+        {
+          "nodeField": "minMonths",
+          "eventField": "months",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "renewalsOnly",
+          "eventField": "isRenewal",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minMonths",
+          "label": "Months at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any. TikTok does not always send the month count."
+        },
+        {
+          "key": "renewalsOnly",
+          "label": "Renewal",
+          "kind": "select",
+          "helpText": "Yes for renewals only, No for first subscriptions only.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "minMonths": 0,
+        "renewalsOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.months",
+          "type": "number",
+          "description": "Months subscribed, 0 when TikTok did not say."
+        },
+        {
+          "path": "metadata.isRenewal",
+          "type": "boolean",
+          "description": "True for a renewal."
+        },
+        {
+          "path": "metadata.subscribesThisSession",
+          "type": "number",
+          "description": "Subscriptions this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.like",
+      "label": "TikTok: likes",
+      "category": "TikTok LIVE",
+      "description": "A viewer tapped likes. TikTok groups taps, so one event can carry several likes, and busy LIVEs send only some of them.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "heart-pulse"
+      },
+      "matchFields": [
+        {
+          "nodeField": "minLikes",
+          "eventField": "likeCount",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "totalAtLeast",
+          "eventField": "totalLikes",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minLikes",
+          "label": "Likes at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Likes in this event. 0 accepts any."
+        },
+        {
+          "key": "totalAtLeast",
+          "label": "LIVE total at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "The LIVE's total likes. 0 accepts any."
+        }
+      ],
+      "defaultData": {
+        "minLikes": 0,
+        "totalAtLeast": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.likeCount",
+          "type": "number",
+          "description": "Likes in this event."
+        },
+        {
+          "path": "metadata.totalLikes",
+          "type": "number",
+          "description": "The LIVE's total likes, as TikTok counts them."
+        },
+        {
+          "path": "metadata.userLikes",
+          "type": "number",
+          "description": "Likes from this viewer this session."
+        },
+        {
+          "path": "metadata.likesThisSession",
+          "type": "number",
+          "description": "Likes seen this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.like-milestone",
+      "label": "TikTok: like milestone",
+      "category": "TikTok LIVE",
+      "description": "The LIVE's total likes passed a round number (every 1000 by default, set under Advanced). The viewer fields describe whose likes passed it.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "flame"
+      },
+      "matchFields": [
+        {
+          "nodeField": "minMilestone",
+          "eventField": "milestone",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minMilestone",
+          "label": "Milestone at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts every milestone."
+        }
+      ],
+      "defaultData": {
+        "minMilestone": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.milestone",
+          "type": "number",
+          "description": "The round number passed."
+        },
+        {
+          "path": "metadata.totalLikes",
+          "type": "number",
+          "description": "The LIVE's total likes now."
+        },
+        {
+          "path": "metadata.step",
+          "type": "number",
+          "description": "The milestone step in use."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.viewer-count",
+      "label": "TikTok: viewer count changed",
+      "category": "TikTok LIVE",
+      "description": "The number of viewers in the LIVE changed. TikTok updates it every few seconds.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "eye"
+      },
+      "matchFields": [
+        {
+          "nodeField": "minViewers",
+          "eventField": "viewerCount",
+          "mode": "gte"
+        },
+        {
+          "nodeField": "maxViewers",
+          "eventField": "viewerCount",
+          "mode": "lte"
+        },
+        {
+          "nodeField": "direction",
+          "eventField": "direction",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "milestoneOnly",
+          "eventField": "crossedMilestone",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "minViewers",
+          "label": "Viewers at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any."
+        },
+        {
+          "key": "maxViewers",
+          "label": "Viewers at most",
+          "kind": "number",
+          "min": 0,
+          "helpText": "Empty accepts any.",
+          "optional": true
+        },
+        {
+          "key": "direction",
+          "label": "Direction",
+          "kind": "select",
+          "helpText": "Only rises, or only drops.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "up",
+              "label": "Going up"
+            },
+            {
+              "value": "down",
+              "label": "Going down"
+            }
+          ]
+        },
+        {
+          "key": "milestoneOnly",
+          "label": "Passed a milestone",
+          "kind": "select",
+          "helpText": "Yes fires only when the count rises past a step (every 50 viewers by default).",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "minViewers": 0,
+        "direction": "",
+        "milestoneOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.viewerCount",
+          "type": "number",
+          "description": "Viewers now."
+        },
+        {
+          "path": "metadata.previous",
+          "type": "number",
+          "description": "Viewers at the last update."
+        },
+        {
+          "path": "metadata.delta",
+          "type": "number",
+          "description": "Change since the last update."
+        },
+        {
+          "path": "metadata.direction",
+          "type": "string",
+          "description": "up or down."
+        },
+        {
+          "path": "metadata.peak",
+          "type": "number",
+          "description": "Most viewers this session."
+        },
+        {
+          "path": "metadata.crossedMilestone",
+          "type": "boolean",
+          "description": "True when the count rose past a milestone."
+        },
+        {
+          "path": "metadata.milestone",
+          "type": "number",
+          "description": "The milestone passed, or 0."
+        },
+        {
+          "path": "metadata.totalViewers",
+          "type": "number",
+          "description": "Everyone who has watched this LIVE so far, as TikTok counts them (0 through TikFinity)."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.chat",
+      "label": "TikTok: chat message",
+      "category": "TikTok LIVE",
+      "description": "A viewer wrote in the chat.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "message-square"
+      },
+      "matchFields": [
+        {
+          "nodeField": "contains",
+          "eventField": "message",
+          "mode": "contains"
+        },
+        {
+          "nodeField": "pattern",
+          "eventField": "message",
+          "mode": "regex"
+        },
+        {
+          "nodeField": "followStatus",
+          "eventField": "followStatus",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "moderatorsOnly",
+          "eventField": "isModerator",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "contains",
+          "label": "Message contains",
+          "kind": "plain-text",
+          "helpText": "Case does not matter. Empty accepts every message.",
+          "placeholder": "hello"
+        },
+        {
+          "key": "pattern",
+          "label": "Message matches",
+          "kind": "plain-text",
+          "helpText": "A regular expression, for advanced filters.",
+          "placeholder": "^!\\w+"
+        },
+        {
+          "key": "followStatus",
+          "label": "Relationship",
+          "kind": "select",
+          "helpText": "Who the viewer is to the streamer.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "none",
+              "label": "Not following"
+            },
+            {
+              "value": "follower",
+              "label": "Follower"
+            },
+            {
+              "value": "friend",
+              "label": "Friend (follows each other)"
+            }
+          ]
+        },
+        {
+          "key": "moderatorsOnly",
+          "label": "Moderator",
+          "kind": "select",
+          "helpText": "Yes keeps only moderators' messages.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "contains": "",
+        "pattern": "",
+        "followStatus": "",
+        "moderatorsOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.message",
+          "type": "string",
+          "description": "What the viewer wrote."
+        },
+        {
+          "path": "metadata.isCommand",
+          "type": "boolean",
+          "description": "True when the message starts with the command prefix."
+        },
+        {
+          "path": "metadata.userChats",
+          "type": "number",
+          "description": "Messages from this viewer this session."
+        },
+        {
+          "path": "metadata.chatsThisSession",
+          "type": "number",
+          "description": "Messages this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.command",
+      "label": "TikTok: chat command",
+      "category": "TikTok LIVE",
+      "description": "A chat message that starts with the command prefix (! by default), like !dance fast. The word after the prefix is the command, the rest are its arguments.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "message-square"
+      },
+      "matchFields": [
+        {
+          "nodeField": "commandName",
+          "eventField": "command",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "followStatus",
+          "eventField": "followStatus",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "commandName",
+          "label": "Command",
+          "kind": "plain-text",
+          "helpText": "Without the prefix. Case does not matter. Empty accepts every command.",
+          "placeholder": "dance"
+        },
+        {
+          "key": "followStatus",
+          "label": "Relationship",
+          "kind": "select",
+          "helpText": "Who the viewer is to the streamer.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "none",
+              "label": "Not following"
+            },
+            {
+              "value": "follower",
+              "label": "Follower"
+            },
+            {
+              "value": "friend",
+              "label": "Friend (follows each other)"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "commandName": "",
+        "followStatus": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.command",
+          "type": "string",
+          "description": "The command, lowercase, without the prefix."
+        },
+        {
+          "path": "metadata.args",
+          "type": "string",
+          "description": "Everything after the command."
+        },
+        {
+          "path": "metadata.message",
+          "type": "string",
+          "description": "The whole message."
+        },
+        {
+          "path": "metadata.prefix",
+          "type": "string",
+          "description": "The prefix in use."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.question",
+      "label": "TikTok: question asked",
+      "category": "TikTok LIVE",
+      "description": "A viewer used TikTok's Q&A to ask a question.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "message-square"
+      },
+      "matchFields": [
+        {
+          "nodeField": "contains",
+          "eventField": "question",
+          "mode": "contains"
+        }
+      ],
+      "fields": [
+        {
+          "key": "contains",
+          "label": "Question contains",
+          "kind": "plain-text",
+          "helpText": "Empty accepts every question."
+        }
+      ],
+      "defaultData": {
+        "contains": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.questionId",
+          "type": "string",
+          "description": "TikTok's id of the question."
+        },
+        {
+          "path": "metadata.question",
+          "type": "string",
+          "description": "The question."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.emote",
+      "label": "TikTok: emote sent",
+      "category": "TikTok LIVE",
+      "description": "A subscriber sent one of the streamer's subscriber emotes.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "sparkles"
+      },
+      "matchFields": [
+        {
+          "nodeField": "emoteId",
+          "eventField": "emoteId",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "emoteId",
+          "label": "Emote id",
+          "kind": "plain-text",
+          "helpText": "Empty accepts every emote. The id is in metadata.emoteId of an earlier event."
+        }
+      ],
+      "defaultData": {
+        "emoteId": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.emoteId",
+          "type": "string",
+          "description": "TikTok's id of the emote."
+        },
+        {
+          "path": "metadata.emoteImageUrl",
+          "type": "string",
+          "description": "Link to the emote's picture."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.pin",
+      "label": "TikTok: message pinned",
+      "category": "TikTok LIVE",
+      "description": "The streamer or a moderator pinned a chat message, or removed the pin. The viewer fields describe who wrote the message.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "bell"
+      },
+      "matchFields": [
+        {
+          "nodeField": "pinAction",
+          "eventField": "pinAction",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "contains",
+          "eventField": "message",
+          "mode": "contains"
+        }
+      ],
+      "fields": [
+        {
+          "key": "pinAction",
+          "label": "Action",
+          "kind": "select",
+          "helpText": "Pinned or unpinned.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "pin",
+              "label": "Pinned"
+            },
+            {
+              "value": "unpin",
+              "label": "Unpinned"
+            }
+          ]
+        },
+        {
+          "key": "contains",
+          "label": "Message contains",
+          "kind": "plain-text",
+          "helpText": "Empty accepts every message."
+        }
+      ],
+      "defaultData": {
+        "pinAction": "",
+        "contains": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.pinAction",
+          "type": "string",
+          "description": "pin or unpin."
+        },
+        {
+          "path": "metadata.message",
+          "type": "string",
+          "description": "The pinned message."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.moderation",
+      "label": "TikTok: messages removed",
+      "category": "TikTok LIVE",
+      "description": "Chat messages were removed by TikTok or a moderator. Useful to take them off an overlay too.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "eye"
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.action",
+          "type": "string",
+          "description": "delete."
+        },
+        {
+          "path": "metadata.messageIds",
+          "type": "string",
+          "description": "Ids of the removed messages, comma separated; they match metadata.eventKey after tiktok:chat:."
+        },
+        {
+          "path": "metadata.userIds",
+          "type": "string",
+          "description": "Ids of the viewers whose messages were removed, comma separated."
+        },
+        {
+          "path": "metadata.count",
+          "type": "number",
+          "description": "How many messages were removed."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.super-fan",
+      "label": "TikTok: super fan",
+      "category": "TikTok LIVE",
+      "description": "Super fan activity: a viewer became a super fan, moved up, or a super fan box dropped.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "star"
+      },
+      "matchFields": [
+        {
+          "nodeField": "phase",
+          "eventField": "phase",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "minLevel",
+          "eventField": "level",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "phase",
+          "label": "What happened",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "join",
+              "label": "Became a super fan"
+            },
+            {
+              "value": "upgrade",
+              "label": "Moved up"
+            },
+            {
+              "value": "box",
+              "label": "Super fan box"
+            }
+          ]
+        },
+        {
+          "key": "minLevel",
+          "label": "Level at least",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any."
+        }
+      ],
+      "defaultData": {
+        "phase": "",
+        "minLevel": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.userId",
+          "type": "string",
+          "description": "The viewer's numeric TikTok id. Stable even when they rename."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle, without the @."
+        },
+        {
+          "path": "metadata.nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "metadata.profilePictureUrl",
+          "type": "string",
+          "description": "Link to the viewer's profile picture."
+        },
+        {
+          "path": "metadata.isModerator",
+          "type": "boolean",
+          "description": "True for a moderator of this LIVE."
+        },
+        {
+          "path": "metadata.isSubscriber",
+          "type": "boolean",
+          "description": "True for a subscriber of the streamer."
+        },
+        {
+          "path": "metadata.followStatus",
+          "type": "string",
+          "description": "none, follower or friend."
+        },
+        {
+          "path": "metadata.gifterLevel",
+          "type": "number",
+          "description": "The viewer's TikTok gifter level, 0 when hidden."
+        },
+        {
+          "path": "metadata.teamMemberLevel",
+          "type": "number",
+          "description": "The viewer's level in the streamer's team (fan club), 0 when none."
+        },
+        {
+          "path": "metadata.topGifterRank",
+          "type": "number",
+          "description": "The viewer's place among this session's gifters, 0 when they have sent nothing."
+        },
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The viewer's display name, or @handle when they have none."
+        },
+        {
+          "path": "metadata.phase",
+          "type": "string",
+          "description": "join, upgrade or box."
+        },
+        {
+          "path": "metadata.level",
+          "type": "number",
+          "description": "The viewer's fan level, 0 when unknown."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.battle",
+      "label": "TikTok: battle",
+      "category": "TikTok LIVE",
+      "description": "A LIVE battle (PK) started, its score changed, the lead changed hands, or it ended. Scores are seen from the streamer's side. Score updates come at most every 2 seconds.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "trophy"
+      },
+      "matchFields": [
+        {
+          "nodeField": "phase",
+          "eventField": "phase",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "result",
+          "eventField": "result",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "leader",
+          "eventField": "leader",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "phase",
+          "label": "Phase",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "start",
+              "label": "Started"
+            },
+            {
+              "value": "update",
+              "label": "Score changed"
+            },
+            {
+              "value": "lead-change",
+              "label": "Lead changed hands"
+            },
+            {
+              "value": "end",
+              "label": "Ended"
+            }
+          ]
+        },
+        {
+          "key": "result",
+          "label": "Result",
+          "kind": "select",
+          "helpText": "Set only when the battle ends.",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "win",
+              "label": "Won"
+            },
+            {
+              "value": "lose",
+              "label": "Lost"
+            },
+            {
+              "value": "draw",
+              "label": "Draw"
+            }
+          ]
+        },
+        {
+          "key": "leader",
+          "label": "Who leads",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "host",
+              "label": "The streamer"
+            },
+            {
+              "value": "opponent",
+              "label": "The opponent"
+            },
+            {
+              "value": "tied",
+              "label": "Tied"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "phase": "",
+        "result": "",
+        "leader": ""
+      },
+      "outputSchema": [
+        {
+          "path": "actorDisplayName",
+          "type": "string",
+          "description": "The opponent's display name."
+        },
+        {
+          "path": "metadata.battleId",
+          "type": "string",
+          "description": "TikTok's id of the battle."
+        },
+        {
+          "path": "metadata.phase",
+          "type": "string",
+          "description": "start, update, lead-change or end."
+        },
+        {
+          "path": "metadata.hostPoints",
+          "type": "number",
+          "description": "The streamer's points."
+        },
+        {
+          "path": "metadata.opponentPoints",
+          "type": "number",
+          "description": "The opponent's points (the strongest one in a multi-way battle)."
+        },
+        {
+          "path": "metadata.leader",
+          "type": "string",
+          "description": "host, opponent or tied."
+        },
+        {
+          "path": "metadata.result",
+          "type": "string",
+          "description": "win, lose or draw when the battle ends; empty before."
+        },
+        {
+          "path": "metadata.durationSeconds",
+          "type": "number",
+          "description": "Seconds since the battle started."
+        },
+        {
+          "path": "metadata.plannedSeconds",
+          "type": "number",
+          "description": "How long TikTok set the battle to last, 0 when unknown."
+        },
+        {
+          "path": "metadata.opponentUserId",
+          "type": "string",
+          "description": "The opponent's TikTok id."
+        },
+        {
+          "path": "metadata.opponentUniqueId",
+          "type": "string",
+          "description": "The opponent's @handle."
+        },
+        {
+          "path": "metadata.opponentNickname",
+          "type": "string",
+          "description": "The opponent's display name."
+        },
+        {
+          "path": "metadata.participantCount",
+          "type": "number",
+          "description": "Creators in the battle."
+        },
+        {
+          "path": "metadata.participants",
+          "type": "object",
+          "description": "Every creator with userId, uniqueId, nickname and points."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.poll",
+      "label": "TikTok: poll",
+      "category": "TikTok LIVE",
+      "description": "The streamer started a poll, the votes changed, or it ended.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "layers"
+      },
+      "matchFields": [
+        {
+          "nodeField": "phase",
+          "eventField": "phase",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "phase",
+          "label": "Phase",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "start",
+              "label": "Started"
+            },
+            {
+              "value": "update",
+              "label": "Votes changed"
+            },
+            {
+              "value": "end",
+              "label": "Ended"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "phase": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.pollId",
+          "type": "string",
+          "description": "TikTok's id of the poll."
+        },
+        {
+          "path": "metadata.phase",
+          "type": "string",
+          "description": "start, update or end."
+        },
+        {
+          "path": "metadata.title",
+          "type": "string",
+          "description": "The question."
+        },
+        {
+          "path": "metadata.options",
+          "type": "object",
+          "description": "Each option with index, label and votes."
+        },
+        {
+          "path": "metadata.leadingOption",
+          "type": "string",
+          "description": "The option with most votes."
+        },
+        {
+          "path": "metadata.leadingVotes",
+          "type": "number",
+          "description": "Its votes."
+        },
+        {
+          "path": "metadata.totalVotes",
+          "type": "number",
+          "description": "Votes in total."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.goal",
+      "label": "TikTok: LIVE goal",
+      "category": "TikTok LIVE",
+      "description": "Progress on the streamer's LIVE goal changed.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "target"
+      },
+      "matchFields": [
+        {
+          "nodeField": "reachedOnly",
+          "eventField": "isReached",
+          "mode": "equals"
+        },
+        {
+          "nodeField": "minPercent",
+          "eventField": "percent",
+          "mode": "gte"
+        }
+      ],
+      "fields": [
+        {
+          "key": "reachedOnly",
+          "label": "Goal reached",
+          "kind": "select",
+          "helpText": "Yes fires once the goal is complete.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Yes"
+            },
+            {
+              "value": "false",
+              "label": "No"
+            }
+          ]
+        },
+        {
+          "key": "minPercent",
+          "label": "Progress at least (%)",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any.",
+          "max": 100
+        }
+      ],
+      "defaultData": {
+        "reachedOnly": "",
+        "minPercent": 0
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.goalId",
+          "type": "string",
+          "description": "TikTok's id of the goal."
+        },
+        {
+          "path": "metadata.description",
+          "type": "string",
+          "description": "The goal's text."
+        },
+        {
+          "path": "metadata.current",
+          "type": "number",
+          "description": "Progress so far."
+        },
+        {
+          "path": "metadata.target",
+          "type": "number",
+          "description": "The target."
+        },
+        {
+          "path": "metadata.percent",
+          "type": "number",
+          "description": "Progress in percent, 0 to 100."
+        },
+        {
+          "path": "metadata.isReached",
+          "type": "boolean",
+          "description": "True once the target is met."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.rank",
+      "label": "TikTok: ranking update",
+      "category": "TikTok LIVE",
+      "description": "The LIVE's place in a TikTok ranking (hourly, daily, weekly) changed.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "star"
+      },
+      "matchFields": [
+        {
+          "nodeField": "maxRank",
+          "eventField": "rank",
+          "mode": "lte"
+        },
+        {
+          "nodeField": "rankType",
+          "eventField": "rankType",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "maxRank",
+          "label": "Place at most",
+          "kind": "number",
+          "min": 0,
+          "helpText": "0 accepts any place."
+        },
+        {
+          "key": "rankType",
+          "label": "Ranking",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "hourly",
+              "label": "Hourly"
+            },
+            {
+              "value": "daily",
+              "label": "Daily"
+            },
+            {
+              "value": "weekly",
+              "label": "Weekly"
+            },
+            {
+              "value": "daily-rookie",
+              "label": "Daily rookie"
+            },
+            {
+              "value": "weekly-rookie",
+              "label": "Weekly rookie"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "maxRank": 0,
+        "rankType": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.rank",
+          "type": "number",
+          "description": "The LIVE's place."
+        },
+        {
+          "path": "metadata.rankType",
+          "type": "string",
+          "description": "hourly, daily, weekly, daily-rookie, weekly-rookie or other."
+        },
+        {
+          "path": "metadata.rankTypeId",
+          "type": "number",
+          "description": "TikTok's numeric id of the ranking."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.stream",
+      "label": "TikTok: stream state",
+      "category": "TikTok LIVE",
+      "description": "The plugin reached a new LIVE, or the stream was paused, resumed, ended or suspended by TikTok.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "radio-tower"
+      },
+      "matchFields": [
+        {
+          "nodeField": "phase",
+          "eventField": "phase",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "phase",
+          "label": "State",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "live",
+              "label": "Live"
+            },
+            {
+              "value": "paused",
+              "label": "Paused"
+            },
+            {
+              "value": "resumed",
+              "label": "Resumed"
+            },
+            {
+              "value": "ended",
+              "label": "Ended"
+            },
+            {
+              "value": "suspended",
+              "label": "Suspended by TikTok"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "phase": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.phase",
+          "type": "string",
+          "description": "live, paused, resumed, ended or suspended."
+        },
+        {
+          "path": "metadata.title",
+          "type": "string",
+          "description": "The LIVE's title, when known."
+        },
+        {
+          "path": "metadata.startedAt",
+          "type": "string",
+          "description": "When the LIVE started, ISO 8601 in UTC, when known."
+        },
+        {
+          "path": "metadata.durationSeconds",
+          "type": "number",
+          "description": "Seconds since the LIVE started, 0 when unknown."
+        },
+        {
+          "path": "metadata.viewerCount",
+          "type": "number",
+          "description": "Viewers at that moment."
+        },
+        {
+          "path": "metadata.totalLikes",
+          "type": "number",
+          "description": "The LIVE's total likes at that moment."
+        },
+        {
+          "path": "metadata.sessionCoins",
+          "type": "number",
+          "description": "Coins received this session."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.connection",
+      "label": "TikTok: connection changed",
+      "category": "TikTok LIVE",
+      "description": "The plugin's connection changed: connecting, connected, waiting for the streamer to go live, disconnected, error or stopped. Use it to warn yourself in VR when events stop.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "signal"
+      },
+      "matchFields": [
+        {
+          "nodeField": "state",
+          "eventField": "state",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "state",
+          "label": "State",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "connected",
+              "label": "Connected"
+            },
+            {
+              "value": "waiting",
+              "label": "Waiting for the LIVE"
+            },
+            {
+              "value": "connecting",
+              "label": "Connecting"
+            },
+            {
+              "value": "disconnected",
+              "label": "Disconnected"
+            },
+            {
+              "value": "error",
+              "label": "Error"
+            },
+            {
+              "value": "stopped",
+              "label": "Stopped by a flow"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "state": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.state",
+          "type": "string",
+          "description": "connecting, connected, waiting, disconnected, error or stopped."
+        },
+        {
+          "path": "metadata.reason",
+          "type": "string",
+          "description": "Why, in plain words."
+        },
+        {
+          "path": "metadata.attempt",
+          "type": "number",
+          "description": "Reconnection attempts since the last success."
+        },
+        {
+          "path": "metadata.rateLimited",
+          "type": "boolean",
+          "description": "True when Euler Stream's rate limit is the reason."
+        },
+        {
+          "path": "metadata.uniqueId",
+          "type": "string",
+          "description": "The username the plugin is watching."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.chat-sent",
+      "label": "TikTok: chat sent (BETA)",
+      "category": "TikTok LIVE",
+      "description": "The result of TikTok: send chat message (BETA), so a flow can react when sending fails.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "send"
+      },
+      "matchFields": [
+        {
+          "nodeField": "okOnly",
+          "eventField": "ok",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "okOnly",
+          "label": "Sent",
+          "kind": "select",
+          "helpText": "Yes for messages that went out, No for failures.",
+          "options": [
+            {
+              "value": "",
+              "label": "Either"
+            },
+            {
+              "value": "true",
+              "label": "Sent"
+            },
+            {
+              "value": "false",
+              "label": "Failed"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "okOnly": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.message",
+          "type": "string",
+          "description": "The message."
+        },
+        {
+          "path": "metadata.ok",
+          "type": "boolean",
+          "description": "True when TikTok accepted it."
+        },
+        {
+          "path": "metadata.error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "trigger.x.tiktok-live.raw",
+      "label": "TikTok: other TikTok event (advanced)",
+      "category": "TikTok LIVE",
+      "description": "Every TikTok message the plugin does not turn into a block of its own, as TikTok sent it. Off unless Advanced > Pass other events is on. Field names can change when TikTok changes them.",
+      "role": "trigger",
+      "appearance": {
+        "icon": "database"
+      },
+      "matchFields": [
+        {
+          "nodeField": "eventName",
+          "eventField": "eventName",
+          "mode": "equals"
+        }
+      ],
+      "fields": [
+        {
+          "key": "eventName",
+          "label": "Message type",
+          "kind": "plain-text",
+          "helpText": "For example WebcastLinkMicMethod. Empty accepts every type."
+        }
+      ],
+      "defaultData": {
+        "eventName": ""
+      },
+      "outputSchema": [
+        {
+          "path": "metadata.eventName",
+          "type": "string",
+          "description": "TikTok's message type."
+        },
+        {
+          "path": "metadata.data",
+          "type": "object",
+          "description": "The message, as decoded. Empty when larger than 32 KB."
+        },
+        {
+          "path": "metadata.truncated",
+          "type": "boolean",
+          "description": "True when the message was too large to pass on."
+        },
+        {
+          "path": "metadata.eventKey",
+          "type": "string",
+          "description": "Unique key of this event, for flows that must not count it twice."
+        },
+        {
+          "path": "metadata.occurredAt",
+          "type": "string",
+          "description": "When it happened, ISO 8601 in UTC."
+        },
+        {
+          "path": "metadata.transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "metadata.roomId",
+          "type": "string",
+          "description": "TikTok room id of the LIVE."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.connect",
+      "label": "TikTok: connect",
+      "category": "TikTok LIVE",
+      "description": "Connects to the LIVE now, or reconnects at once instead of waiting for the next retry.",
+      "role": "action",
+      "appearance": {
+        "icon": "plug"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "state",
+          "type": "string",
+          "description": "The connection state after the call."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.disconnect",
+      "label": "TikTok: disconnect",
+      "category": "TikTok LIVE",
+      "description": "Stops listening to the LIVE until TikTok: connect runs or the plugin restarts. Triggers stop firing.",
+      "role": "action",
+      "appearance": {
+        "icon": "power"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "state",
+          "type": "string",
+          "description": "The connection state after the call."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.wait-until-live",
+      "label": "TikTok: wait until live",
+      "category": "TikTok LIVE",
+      "description": "Waits up to 25 seconds for the streamer to go live, then connects. Direct connection only.",
+      "role": "action",
+      "appearance": {
+        "icon": "timer"
+      },
+      "fields": [
+        {
+          "key": "timeoutSeconds",
+          "label": "Wait at most (seconds)",
+          "kind": "number",
+          "min": 1,
+          "max": 25,
+          "helpText": "Flow actions may run for 30 seconds at most."
+        }
+      ],
+      "defaultData": {
+        "timeoutSeconds": 20
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "live",
+          "type": "boolean",
+          "description": "True when the streamer is live."
+        },
+        {
+          "path": "waitedSeconds",
+          "type": "number",
+          "description": "How long it waited."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.refresh-gifts",
+      "label": "TikTok: refresh gift list",
+      "category": "TikTok LIVE",
+      "description": "Loads the room's whole gift list into the gift picker. TikTok's list needs a signed request that Euler Stream serves on Business plans only; without one, gifts are learned as they arrive.",
+      "role": "action",
+      "appearance": {
+        "icon": "gift"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "count",
+          "type": "number",
+          "description": "Gifts the plugin knows now."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.reset-session",
+      "label": "TikTok: reset session",
+      "category": "TikTok LIVE",
+      "description": "Starts the session counters over: coins and gifters, likes, or everything. The plugin also does this by itself when a new LIVE starts, unless Reset per stream is off.",
+      "role": "action",
+      "appearance": {
+        "icon": "circle-stop"
+      },
+      "fields": [
+        {
+          "key": "scope",
+          "label": "Reset",
+          "kind": "select",
+          "helpText": "",
+          "options": [
+            {
+              "value": "all",
+              "label": "Everything"
+            },
+            {
+              "value": "coins",
+              "label": "Coins and gifters"
+            },
+            {
+              "value": "likes",
+              "label": "Likes"
+            }
+          ]
+        }
+      ],
+      "defaultData": {
+        "scope": "all"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "scope",
+          "type": "string",
+          "description": "What was reset."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.send-chat",
+      "label": "TikTok: send chat message (BETA)",
+      "category": "TikTok LIVE",
+      "description": "BETA, may be switched off by the plugin maintainers without notice. Sends a message to the LIVE's chat as the signed-in account. Needs Chat (BETA) on, TikTok: chat sign-in, the direct connection and an Euler Stream key on a plan that includes chat. TikTok may suspend accounts that post automatically; use a secondary account.",
+      "role": "action",
+      "appearance": {
+        "icon": "send"
+      },
+      "fields": [
+        {
+          "key": "message",
+          "label": "Message",
+          "kind": "text",
+          "placeholder": "Thanks for the {{ $trigger.metadata.giftName }}!",
+          "helpText": "Up to 150 characters."
+        }
+      ],
+      "defaultData": {
+        "message": ""
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        },
+        {
+          "path": "disabledReason",
+          "type": "string",
+          "description": "Why sending is unavailable: disabled, or deprecated: followed by the maintainers' note. Empty when it was tried."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.chat-sign-in",
+      "label": "TikTok: chat sign-in (BETA)",
+      "category": "TikTok LIVE",
+      "description": "Opens a sign-in page on this computer for sending chat. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault. Open the url from the output (also shown in the plugin's status) within 10 minutes.",
+      "role": "action",
+      "appearance": {
+        "icon": "user"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "url",
+          "type": "string",
+          "description": "The page to open in your browser, on 127.0.0.1."
+        },
+        {
+          "path": "expiresInSeconds",
+          "type": "number",
+          "description": "How long the page stays open."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.chat-sign-out",
+      "label": "TikTok: chat sign-out (BETA)",
+      "category": "TikTok LIVE",
+      "description": "Deletes the saved TikTok session cookies from the vault.",
+      "role": "action",
+      "appearance": {
+        "icon": "power"
+      },
+      "outputSchema": [
+        {
+          "path": "ok",
+          "type": "boolean",
+          "description": "False when the action could not do its job; error says why."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "description": "Why it failed, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.status",
+      "label": "TikTok: connection status",
+      "category": "TikTok LIVE",
+      "description": "How the plugin is doing: connected or not, why, and whether chat sending is available.",
+      "role": "input",
+      "appearance": {
+        "icon": "activity"
+      },
+      "outputSchema": [
+        {
+          "path": "connected",
+          "type": "boolean",
+          "description": "True while connected to the LIVE."
+        },
+        {
+          "path": "state",
+          "type": "string",
+          "description": "connecting, connected, waiting, disconnected, error or stopped."
+        },
+        {
+          "path": "transport",
+          "type": "string",
+          "description": "direct or tikfinity."
+        },
+        {
+          "path": "uniqueId",
+          "type": "string",
+          "description": "The username being watched."
+        },
+        {
+          "path": "roomId",
+          "type": "string",
+          "description": "The current room id, or empty."
+        },
+        {
+          "path": "isLive",
+          "type": "boolean",
+          "description": "True while connected to a LIVE."
+        },
+        {
+          "path": "lastError",
+          "type": "string",
+          "description": "The last error, or empty."
+        },
+        {
+          "path": "attempt",
+          "type": "number",
+          "description": "Reconnection attempts since the last success."
+        },
+        {
+          "path": "rateLimited",
+          "type": "boolean",
+          "description": "True while Euler Stream's rate limit holds the connection back."
+        },
+        {
+          "path": "giftCatalogueSize",
+          "type": "number",
+          "description": "Gifts in the gift picker."
+        },
+        {
+          "path": "sessionStartedAt",
+          "type": "string",
+          "description": "When the session started, ISO 8601 in UTC."
+        },
+        {
+          "path": "eventsEmitted",
+          "type": "number",
+          "description": "Triggers fired since the plugin started."
+        },
+        {
+          "path": "duplicatesDropped",
+          "type": "number",
+          "description": "Repeated TikTok messages ignored since the plugin started."
+        },
+        {
+          "path": "chatAvailable",
+          "type": "boolean",
+          "description": "True when TikTok: send chat message can send right now."
+        },
+        {
+          "path": "chatSignedIn",
+          "type": "boolean",
+          "description": "True when session cookies are saved."
+        },
+        {
+          "path": "chatDisabledReason",
+          "type": "string",
+          "description": "Why chat cannot send, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.room-stats",
+      "label": "TikTok: LIVE stats",
+      "category": "TikTok LIVE",
+      "description": "The session's numbers: viewers, likes, coins and activity counts.",
+      "role": "input",
+      "appearance": {
+        "icon": "gauge"
+      },
+      "outputSchema": [
+        {
+          "path": "viewerCount",
+          "type": "number",
+          "description": "Viewers now."
+        },
+        {
+          "path": "peakViewers",
+          "type": "number",
+          "description": "Most viewers this session."
+        },
+        {
+          "path": "totalLikes",
+          "type": "number",
+          "description": "The LIVE's total likes, as TikTok counts them."
+        },
+        {
+          "path": "sessionCoins",
+          "type": "number",
+          "description": "Coins received this session."
+        },
+        {
+          "path": "sessionGifts",
+          "type": "number",
+          "description": "Gifts received this session (a streak of 10 counts 10)."
+        },
+        {
+          "path": "likesThisSession",
+          "type": "number",
+          "description": "Likes seen this session."
+        },
+        {
+          "path": "chats",
+          "type": "number",
+          "description": "Chat messages this session."
+        },
+        {
+          "path": "follows",
+          "type": "number",
+          "description": "Follows this session."
+        },
+        {
+          "path": "shares",
+          "type": "number",
+          "description": "Shares this session."
+        },
+        {
+          "path": "joins",
+          "type": "number",
+          "description": "Joins seen this session."
+        },
+        {
+          "path": "subscribes",
+          "type": "number",
+          "description": "Subscriptions this session."
+        },
+        {
+          "path": "title",
+          "type": "string",
+          "description": "The LIVE's title, when known."
+        },
+        {
+          "path": "startedAt",
+          "type": "string",
+          "description": "When the LIVE started, ISO 8601 in UTC, when known."
+        },
+        {
+          "path": "durationSeconds",
+          "type": "number",
+          "description": "Seconds since the LIVE started, 0 when unknown."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.gift-lookup",
+      "label": "TikTok: gift lookup",
+      "category": "TikTok LIVE",
+      "description": "Finds a gift the plugin knows, by id or by English name, to get its id and price.",
+      "role": "input",
+      "appearance": {
+        "icon": "gift"
+      },
+      "fields": [
+        {
+          "key": "giftId",
+          "label": "Gift id",
+          "kind": "number",
+          "min": 0,
+          "optional": true,
+          "helpText": "Takes priority over the name."
+        },
+        {
+          "key": "giftName",
+          "label": "Gift name",
+          "kind": "text",
+          "placeholder": "Rose",
+          "helpText": "The English name; case does not matter."
+        }
+      ],
+      "defaultData": {
+        "giftName": ""
+      },
+      "outputSchema": [
+        {
+          "path": "found",
+          "type": "boolean",
+          "description": "True when the gift is known."
+        },
+        {
+          "path": "giftId",
+          "type": "number",
+          "description": "The gift's id."
+        },
+        {
+          "path": "giftName",
+          "type": "string",
+          "description": "The gift's English name."
+        },
+        {
+          "path": "diamondCount",
+          "type": "number",
+          "description": "Coins one gift costs."
+        },
+        {
+          "path": "giftType",
+          "type": "number",
+          "description": "TikTok's gift type; 1 is streakable."
+        },
+        {
+          "path": "streakable",
+          "type": "boolean",
+          "description": "True for gifts that can be tapped repeatedly."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.battle-state",
+      "label": "TikTok: battle score",
+      "category": "TikTok LIVE",
+      "description": "The current battle's score from the streamer's side, or the last battle's result.",
+      "role": "input",
+      "appearance": {
+        "icon": "trophy"
+      },
+      "outputSchema": [
+        {
+          "path": "active",
+          "type": "boolean",
+          "description": "True during a battle."
+        },
+        {
+          "path": "battleId",
+          "type": "string",
+          "description": "The current or last battle's id."
+        },
+        {
+          "path": "hostPoints",
+          "type": "number",
+          "description": "The streamer's points."
+        },
+        {
+          "path": "opponentPoints",
+          "type": "number",
+          "description": "The opponent's points."
+        },
+        {
+          "path": "leader",
+          "type": "string",
+          "description": "host, opponent or tied."
+        },
+        {
+          "path": "opponentUniqueId",
+          "type": "string",
+          "description": "The opponent's @handle."
+        },
+        {
+          "path": "durationSeconds",
+          "type": "number",
+          "description": "Seconds the battle has run (or ran)."
+        },
+        {
+          "path": "lastResult",
+          "type": "string",
+          "description": "win, lose or draw of the last finished battle, or empty."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.top-gifters",
+      "label": "TikTok: top gifters",
+      "category": "TikTok LIVE",
+      "description": "The session's gifters ranked by coins.",
+      "role": "input",
+      "appearance": {
+        "icon": "trophy"
+      },
+      "fields": [
+        {
+          "key": "limit",
+          "label": "How many",
+          "kind": "number",
+          "min": 1,
+          "max": 20,
+          "helpText": "1 to 20."
+        }
+      ],
+      "defaultData": {
+        "limit": 5
+      },
+      "outputSchema": [
+        {
+          "path": "count",
+          "type": "number",
+          "description": "Gifters in the list."
+        },
+        {
+          "path": "topUserId",
+          "type": "string",
+          "description": "First place's TikTok id."
+        },
+        {
+          "path": "topUniqueId",
+          "type": "string",
+          "description": "First place's @handle."
+        },
+        {
+          "path": "topNickname",
+          "type": "string",
+          "description": "First place's display name."
+        },
+        {
+          "path": "topCoins",
+          "type": "number",
+          "description": "First place's coins."
+        },
+        {
+          "path": "list",
+          "type": "object",
+          "description": "Each gifter with rank, userId, uniqueId, nickname, coins and gifts."
+        },
+        {
+          "path": "text",
+          "type": "string",
+          "description": "The list as one line, like 1. Ana 500, 2. Leo 120."
+        }
+      ]
+    },
+    {
+      "type": "action.x.tiktok-live.user-stats",
+      "label": "TikTok: viewer stats",
+      "category": "TikTok LIVE",
+      "description": "What one viewer has done this session.",
+      "role": "input",
+      "appearance": {
+        "icon": "user"
+      },
+      "fields": [
+        {
+          "key": "uniqueId",
+          "label": "Viewer",
+          "kind": "text",
+          "placeholder": "{{ $trigger.metadata.uniqueId }}",
+          "helpText": "@handle or numeric TikTok id."
+        }
+      ],
+      "defaultData": {
+        "uniqueId": {
+          "mode": "expression",
+          "expression": "{{ $trigger.metadata.uniqueId }}"
+        }
+      },
+      "outputSchema": [
+        {
+          "path": "found",
+          "type": "boolean",
+          "description": "True when the viewer did something this session."
+        },
+        {
+          "path": "userId",
+          "type": "string",
+          "description": "The viewer's TikTok id."
+        },
+        {
+          "path": "uniqueId",
+          "type": "string",
+          "description": "The viewer's @handle."
+        },
+        {
+          "path": "nickname",
+          "type": "string",
+          "description": "The viewer's display name."
+        },
+        {
+          "path": "coins",
+          "type": "number",
+          "description": "Coins sent this session."
+        },
+        {
+          "path": "gifts",
+          "type": "number",
+          "description": "Gifts sent this session."
+        },
+        {
+          "path": "likes",
+          "type": "number",
+          "description": "Likes this session."
+        },
+        {
+          "path": "chats",
+          "type": "number",
+          "description": "Chat messages this session."
+        },
+        {
+          "path": "joins",
+          "type": "number",
+          "description": "Times joined this session."
+        },
+        {
+          "path": "rank",
+          "type": "number",
+          "description": "Place among the session's gifters, 0 when they sent nothing."
+        },
+        {
+          "path": "isReturning",
+          "type": "boolean",
+          "description": "True when the plugin saw the viewer in an earlier LIVE."
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "tiktok-live-log-gifts",
+      "name": "TikTok LIVE: log every gift",
+      "description": "Writes each gift to the console. Turn it on to check the connection before wiring gifts to anything else.",
+      "flow": {
+        "schemaVersion": 1,
+        "id": "tpl-tiktok-live-log-gifts",
+        "name": "TikTok LIVE: gifts in the console",
+        "enabled": false,
+        "nodes": [
+          {
+            "type": "trigger.x.tiktok-live.gift",
+            "id": "gift",
+            "giftId": "",
+            "minCoins": 0,
+            "minDiamondsPerGift": 0,
+            "streakable": "",
+            "toHostOnly": "",
+            "firstGiftOnly": ""
+          },
+          {
+            "type": "action.console.log",
+            "id": "log-gift",
+            "level": "info",
+            "message": {
+              "mode": "expression",
+              "expression": "{{ $trigger.actorDisplayName }} sent {{ $trigger.metadata.repeatCount }}x {{ $trigger.metadata.giftName }} ({{ $trigger.metadata.coins }} coins)"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e-1",
+            "source": "gift",
+            "target": "log-gift"
+          }
+        ],
+        "layout": {
+          "gift": {
+            "x": 0,
+            "y": 0
+          },
+          "log-gift": {
+            "x": 380,
+            "y": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "tiktok-live-big-gifts",
+      "name": "TikTok LIVE: gifts of 100 coins or more",
+      "description": "A starting point for a reaction to big gifts: swap the console block for an avatar, OSC or device block.",
+      "flow": {
+        "schemaVersion": 1,
+        "id": "tpl-tiktok-live-big-gifts",
+        "name": "TikTok LIVE: big gifts",
+        "enabled": false,
+        "nodes": [
+          {
+            "type": "trigger.x.tiktok-live.gift",
+            "id": "big-gift",
+            "giftId": "",
+            "minCoins": 100,
+            "minDiamondsPerGift": 0,
+            "streakable": "",
+            "toHostOnly": "",
+            "firstGiftOnly": ""
+          },
+          {
+            "type": "action.console.log",
+            "id": "log-big-gift",
+            "level": "info",
+            "message": {
+              "mode": "expression",
+              "expression": "Big gift: {{ $trigger.metadata.coins }} coins from {{ $trigger.actorDisplayName }}, now {{ $trigger.metadata.senderRank }} in the ranking"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e-1",
+            "source": "big-gift",
+            "target": "log-big-gift"
+          }
+        ],
+        "layout": {
+          "big-gift": {
+            "x": 0,
+            "y": 0
+          },
+          "log-big-gift": {
+            "x": 380,
+            "y": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "tiktok-live-battles",
+      "name": "TikTok LIVE: battle start and result",
+      "description": "Logs when a battle starts and how it ends.",
+      "flow": {
+        "schemaVersion": 1,
+        "id": "tpl-tiktok-live-battles",
+        "name": "TikTok LIVE: battles",
+        "enabled": false,
+        "nodes": [
+          {
+            "type": "trigger.x.tiktok-live.battle",
+            "id": "battle",
+            "phase": "",
+            "result": "",
+            "leader": ""
+          },
+          {
+            "type": "action.console.log",
+            "id": "log-battle",
+            "level": "info",
+            "message": {
+              "mode": "expression",
+              "expression": "Battle {{ $trigger.metadata.phase }} against @{{ $trigger.metadata.opponentUniqueId }}: {{ $trigger.metadata.hostPoints }} to {{ $trigger.metadata.opponentPoints }} {{ $trigger.metadata.result }}"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e-1",
+            "source": "battle",
+            "target": "log-battle"
+          }
+        ],
+        "layout": {
+          "battle": {
+            "x": 0,
+            "y": 0
+          },
+          "log-battle": {
+            "x": 380,
+            "y": 0
+          }
+        }
+      }
+    }
+  ]
+}
