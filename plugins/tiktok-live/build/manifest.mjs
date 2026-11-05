@@ -518,7 +518,7 @@ const actions = [
   block("chat-sign-in", {
     label: "chat sign-in (BETA)",
     icon: "user",
-    description: "Opens a sign-in page on this computer for sending chat. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault. Open the url from the output (also shown in the plugin's status) within 10 minutes.",
+    description: "Starts a sign-in page on this computer for sending chat. Open its url in your browser within 10 minutes: it is in the output and at the top of the plugin's status, and the Studio does not open it for you. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault.",
     outputs: [ok, ["url", "string", "The page to open in your browser, on 127.0.0.1."], ["expiresInSeconds", "number", "How long the page stays open."], error],
   }),
   block("chat-sign-out", {
@@ -676,7 +676,7 @@ const configSchema = {
     separator("tikfinitySection", "TikFinity bridge", "Open TikFinity on this computer, connect it to your LIVE, and pick TikFinity app under General. Gifts, chat, likes, follows, shares, joins, subscriptions and battles arrive through it; the gift list, live checks and sending chat do not.", "tikfinity"),
     field("bridgeUrl", "string", "TikFinity address", "TikFinity's local WebSocket. Change it only if TikFinity tells you a different one.", "tikfinity", { default: "ws://localhost:21213/", pattern: "^wss?://[^\\s/]+(/[^\\s]*)?$" }),
     separator("chatSection", "Sending chat is BETA", "It may stop working or be switched off by the plugin maintainers at any time. TikTok may suspend accounts that post automatically: use a secondary account. It needs the direct connection and an Euler Stream key on a plan that includes chat.", "chat"),
-    field("chatEnabled", "boolean", "Chat (BETA) enabled", "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which opens a page in your browser.", "chat", { default: false }),
+    field("chatEnabled", "boolean", "Chat (BETA) enabled", "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which gives you a page to open in your browser.", "chat", { default: false }),
     field("giftStreakMode", "select", "Count streakable gifts", "When a viewer taps a Rose 10 times, gift received fires once with 10, or ten times with 1.", "advanced", { default: "completed", options: [{ value: "completed", label: "Once, when the streak ends" }, { value: "each", label: "On every tap" }] }),
     field("coinMilestoneStep", "number", "Session coin milestone every", "Coins. 0 turns session coin milestones off.", "advanced", { default: 500, min: 0, max: 1000000 }),
     field("gifterMilestoneStep", "number", "Viewer coin milestone every", "Coins from one viewer. 0 turns them off.", "advanced", { default: 100, min: 0, max: 1000000 }),

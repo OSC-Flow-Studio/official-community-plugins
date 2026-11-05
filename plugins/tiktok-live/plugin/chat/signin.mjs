@@ -1,10 +1,11 @@
 // The BETA chat sign-in. Sending chat needs the two TikTok session cookies of the account
 // that will speak (sessionid and tt-target-idc). The plugin cannot read a browser's
-// cookies, so "Chat: sign in" opens a page on this computer (127.0.0.1 only) that explains
+// cookies, so "Chat: sign in" starts a page on this computer (127.0.0.1 only) that explains
 // where to find them and saves what the person pastes straight into the Studio's encrypted
 // vault. The values never reach the flow, the config file or the log.
 //
-// The page lives at a random path, accepts one save, and closes after ten minutes.
+// The page lives at a random path, accepts one save, and closes after ten minutes. The
+// plugin SDK has no way to open a browser, so the person opens the url themselves.
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import http from "node:http";
 import { renderSignInPage } from "./pages.mjs";
@@ -21,7 +22,9 @@ const HEADERS = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "no-store",
   "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
-  "referrer-policy": "no-referrer",
+  // same-origin, not no-referrer: with no-referrer, Chrome sends "Origin: null" on this
+  // page's own form post, and the origin check below would refuse it.
+  "referrer-policy": "same-origin",
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
 };
@@ -37,6 +40,17 @@ export function extractCookie(raw, name) {
     if (key === name) return rest.join("=").trim().replace(/^"|"$/g, "");
   }
   return value.startsWith(`${name}=`) ? value.slice(name.length + 1) : "";
+}
+
+/**
+ * True when the request came from this page. Browsers say so in Sec-Fetch-Site; a request
+ * without it (an older browser, a script) is judged by Origin, which must be absent or ours.
+ */
+export function fromThisPage(headers) {
+  const site = headers["sec-fetch-site"];
+  if (site) return site === "same-origin";
+  const origin = headers.origin;
+  return !origin || origin === `http://${headers.host}`;
 }
 
 function sameToken(a, b) {
@@ -113,10 +127,8 @@ export class ChatSignIn {
       response.end();
       return;
     }
-    // A form posted from another site carries its own Origin; only this page may save.
-    const origin = request.headers.origin;
-    const host = request.headers.host;
-    if (origin && origin !== `http://${host}`) {
+    // A form posted from another site says so; only this page may save.
+    if (!fromThisPage(request.headers)) {
       this.send(response, 403, "error", { message: "This form only accepts answers from its own page." });
       return;
     }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SESSION_ID_KEY, TARGET_IDC_KEY, extractCookie } from "../plugin/chat/signin.mjs";
+import { SESSION_ID_KEY, TARGET_IDC_KEY, extractCookie, fromThisPage } from "../plugin/chat/signin.mjs";
 import { fakeSource, proto } from "./helpers/fakes.mjs";
 import { boot, flagsFetch } from "./helpers/scenario.mjs";
 
@@ -224,18 +224,23 @@ test("the sign-in page saves the cookies to the vault and nothing else accepts t
     assert.equal(ok, true);
     assert.equal(expiresInSeconds, 600);
     assert.match(url, /^http:\/\/127\.0\.0\.1:\d+\/[A-Za-z0-9_-]{32}$/);
-    assert.match(run.statuses.at(-1).errors.join(" "), /sign-in page is open/);
+    assert.equal(run.statuses.at(-1).errors[0], `Chat sign-in: open ${url} in your browser`);
 
     const form = await fetch(url);
     assert.equal(form.status, 200);
     assert.match(form.headers.get("content-security-policy"), /default-src 'none'/);
+    assert.equal(form.headers.get("referrer-policy"), "same-origin");
+    assert.match(await form.text(), /<meta name="referrer" content="same-origin">/);
     assert.equal((await fetch(`${new URL(url).origin}/wrong-token`)).status, 410);
 
     const post = (body, headers = {}) => fetch(url, { method: "POST", body: new URLSearchParams(body), headers: { "content-type": "application/x-www-form-urlencoded", ...headers } });
     assert.equal((await post({ sessionId: "abc", ttTargetIdc: "useast2a" })).status, 400);
     assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "https://evil.example" })).status, 403);
+    assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "null", "sec-fetch-site": "cross-site" })).status, 403);
+    assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "null" })).status, 403);
     assert.equal(vault.has(SESSION_ID_KEY), false);
-    assert.equal((await post({ sessionId: "sessionid=abcdef0123456789; other=1", ttTargetIdc: "tt-target-idc=useast2a" })).status, 200);
+    // What Chrome sends for the page's own form post, measured on 2026-11-05.
+    assert.equal((await post({ sessionId: "sessionid=abcdef0123456789; other=1", ttTargetIdc: "tt-target-idc=useast2a" }, { origin: "null", "sec-fetch-site": "same-origin" })).status, 200);
     assert.equal(vault.get(SESSION_ID_KEY), "abcdef0123456789");
     assert.equal(vault.get(TARGET_IDC_KEY), "useast2a");
     assert.ok(!run.logs.some(([, message]) => message.includes("abcdef0123456789")), "cookies never reach the log");
@@ -265,4 +270,16 @@ test("stream end closes open streaks and the battle, and other TikTok messages p
   } finally {
     await run.runtime.shutdown();
   }
+});
+
+test("the sign-in page accepts only its own form post", () => {
+  const host = "127.0.0.1:40554";
+  assert.equal(fromThisPage({ host, origin: "null", "sec-fetch-site": "same-origin" }), true, "Chrome under a no-referrer policy");
+  assert.equal(fromThisPage({ host, origin: `http://${host}`, "sec-fetch-site": "same-origin" }), true);
+  assert.equal(fromThisPage({ host, origin: "https://evil.example", "sec-fetch-site": "cross-site" }), false);
+  assert.equal(fromThisPage({ host, origin: "null", "sec-fetch-site": "cross-site" }), false);
+  assert.equal(fromThisPage({ host, "sec-fetch-site": "same-site" }), false, "another port on 127.0.0.1");
+  assert.equal(fromThisPage({ host }), true, "no browser headers at all");
+  assert.equal(fromThisPage({ host, origin: `http://${host}` }), true);
+  assert.equal(fromThisPage({ host, origin: "null" }), false);
 });

@@ -254,7 +254,7 @@ export class TikTokLiveRuntime {
     const errors = [];
     const chat = this.chatAvailability();
     if (this.config.chatEnabled && !chat.available) errors.push(chat.reason.replace(/^deprecated: /, "Send chat is deprecated: "));
-    if (this.signIn.open) errors.push(`Chat sign-in page is open at ${this.signIn.url}`);
+    const signInLine = this.signIn.open ? `Chat sign-in: open ${this.signIn.url} in your browser` : "";
     const { state, reason } = this.state;
     let status;
     if (state === "connected") {
@@ -270,6 +270,8 @@ export class TikTokLiveRuntime {
       status = { health: state === "error" ? "error" : "degraded", connectionState: state === "error" ? "not connected" : "reconnecting", errors: [reason || this.lastError || "Not connected."] };
     }
     if (errors.length > 0) status.errors = [...(status.errors ?? []), ...errors];
+    // The Studio shows only the first line, and it cannot open a browser for a plugin.
+    if (signInLine) status.errors = [signInLine, ...(status.errors ?? [])];
     this.ctx.setStatus(status);
   }
 

@@ -192,7 +192,7 @@
         "key": "chatEnabled",
         "type": "boolean",
         "label": "Chat (BETA) enabled",
-        "description": "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which opens a page in your browser.",
+        "description": "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which gives you a page to open in your browser.",
         "tab": "chat",
         "default": false
       },
@@ -4240,7 +4240,7 @@
       "type": "action.x.tiktok-live.chat-sign-in",
       "label": "TikTok: chat sign-in (BETA)",
       "category": "TikTok LIVE",
-      "description": "Opens a sign-in page on this computer for sending chat. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault. Open the url from the output (also shown in the plugin's status) within 10 minutes.",
+      "description": "Starts a sign-in page on this computer for sending chat. Open its url in your browser within 10 minutes: it is in the output and at the top of the plugin's status, and the Studio does not open it for you. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault.",
       "role": "action",
       "appearance": {
         "icon": "user"

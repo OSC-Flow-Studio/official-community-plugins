@@ -87,8 +87,9 @@ message** returns `disabledReason` starting with `deprecated:` and does nothing.
 suspend accounts that post automatically, so use a secondary account.
 
 It needs the direct connection and an Euler Stream key on a plan that includes chat. To
-sign in, turn on **Chat (BETA) enabled**, run **TikTok: chat sign-in** and open the address
-it returns (also shown in the status line). The page runs on this computer for ten
+sign in, turn on **Chat (BETA) enabled**, run **TikTok: chat sign-in**, then open the address
+it returns in your browser. The Studio does not open it for you; the address is also the
+first line of the plugin's status. The page runs on this computer for ten
 minutes, explains how to copy the account's `sessionid` and `tt-target-idc` cookies, and
 saves them to the Studio's encrypted vault. They are sent only to Euler Stream, which posts
 each message for you. **TikTok: chat sign-out** deletes them.

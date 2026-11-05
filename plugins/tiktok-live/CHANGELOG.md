@@ -12,3 +12,10 @@
 - Matching never depends on the computer's language or time zone.
 - Sending chat is BETA, off by default, and can be switched off remotely by the maintainers.
 - New permissions: `secrets`, `resources` and network `any`.
+
+## 0.1.1
+
+- Fix: Let the TikTok LIVE chat sign-in page save its own form
+- The page sent Referrer-Policy: no-referrer, so Chrome posted the form with
+"Origin: null" and the origin check refused every save with "Nothing was saved".The page now uses same-origin, and the check trusts Sec-Fetch-Site first, falling back to Origin only when a client sends no fetch metadata.
+- The plugin SDK cannot open a browser, so the sign-in address is now the first line of the plugin's status, which is the only line the Studio shows. The block, the setting and the user guide say to open it yourself instead of promising it opens.
