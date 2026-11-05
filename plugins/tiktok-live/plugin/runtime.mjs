@@ -2,7 +2,7 @@
 // what happened into Studio triggers. Actions and inputs read and steer the same state.
 import { BattleTracker } from "./battle.mjs";
 import { FeatureFlags } from "./chat/flags.mjs";
-import { ChatSignIn, clearChatSession, readChatSession } from "./chat/signin.mjs";
+import { ChatSender, NotLiveError } from "./chat/sender.mjs";
 import { normalizeConfig } from "./config.mjs";
 import { RecentKeys, eventKey } from "./dedup.mjs";
 import { GiftCatalogue } from "./gifts.mjs";
@@ -21,6 +21,8 @@ const SAVE_VIEWERS_EVERY_MS = 60_000;
 const SUBSCRIBE_REPEAT_MS = 60_000;
 const RAW_LIMIT = 32 * 1024;
 const CHAT_LIMIT = 150;
+// Where 0.1.x kept the cookies from the removed sign-in page; deleted on start.
+const LEGACY_CHAT_KEYS = ["chat-session-id", "chat-tt-target-idc"];
 
 // The protobuf types the plugin maps itself. Anything else can reach flows as a raw event.
 const MAPPED_TYPES = new Set([
@@ -50,6 +52,14 @@ function safeJson(value) {
   } catch {
     return { data: {}, truncated: true };
   }
+}
+
+/** Why a send failed, in words that say what to change. Never includes cookies or keys. */
+function explainChat(error) {
+  if (error instanceof NotLiveError) return error.message;
+  const reason = explain(error);
+  if (/paid Euler Stream plan/.test(reason)) return "Euler Stream refused the message. Sending chat needs Euler's Webcast Premium add-on, which the free trial does not include; check the API key in the Euler Stream tab and your Euler plan.";
+  return reason;
 }
 
 export class TikTokLiveRuntime {
@@ -92,13 +102,14 @@ export class TikTokLiveRuntime {
       if (!flags.chat.enabled) this.ctx.log.warn(`Sending chat was switched off by the plugin maintainers${flags.chat.message ? `: ${flags.chat.message}` : "."}`);
       this.publishStatus();
     };
-    this.signIn = new ChatSignIn({ secrets: ctx.secrets, timers: this.timers, now: this.now, log: ctx.log, onSaved: () => this.publishStatus() });
+    this.chatSender = overrides.chatSender ?? new ChatSender({ load: overrides.loadVendor });
   }
 
   // ---------------------------------------------------------------- lifecycle
 
   async start() {
     await this.restore();
+    void Promise.all(LEGACY_CHAT_KEYS.map((key) => this.ctx.secrets.delete(key))).catch(() => {});
     this.publishGifts();
     await this.flags.start();
     this.intervals.push(this.timers.setInterval(() => void this.save(false), SAVE_EVERY_MS));
@@ -179,7 +190,6 @@ export class TikTokLiveRuntime {
       const gift = result.counted;
       if (gift) this.session.recordGift(gift.user, gift.diamondCount * gift.repeatCount, gift.repeatCount);
     }
-    await this.signIn.close();
     const source = this.source;
     this.source = null;
     try {
@@ -240,12 +250,19 @@ export class TikTokLiveRuntime {
     this.publishStatus();
   }
 
+  /**
+   * Whether TikTok: send chat message can try, and if not, a fixed code for flows plus a
+   * sentence that names the setting to change.
+   */
   chatAvailability() {
-    if (!this.config.chatEnabled) return { available: false, reason: "Chat (BETA) is off in the plugin settings." };
-    if (!this.flags.chat.enabled) return { available: false, reason: `deprecated: Sending chat was switched off by the plugin maintainers${this.flags.chat.message ? `. ${this.flags.chat.message}` : "."}` };
-    if (this.config.transport !== "direct") return { available: false, reason: "Sending chat needs the direct connection." };
-    if (!this.config.signApiKey) return { available: false, reason: "Sending chat needs an Euler Stream API key on a plan that includes chat." };
-    return { available: true, reason: "" };
+    const refuse = (code, reason) => ({ available: false, code, reason });
+    if (!this.config.chatEnabled) return refuse("chat-off", "Sending chat is off. Turn on Chat (BETA) enabled in the plugin settings, Chat (BETA) tab.");
+    if (!this.flags.chat.enabled) return refuse("deprecated", `Sending chat was switched off by the plugin maintainers${this.flags.chat.message ? `. ${this.flags.chat.message}` : "."}`);
+    if (!this.config.uniqueId) return refuse("missing-username", "Add the TikTok username of the LIVE in the plugin settings, General tab.");
+    if (!this.config.signApiKey) return refuse("missing-api-key", "Sending chat goes through Euler Stream, a separate paid service. Add an Euler Stream API key with the Webcast Premium add-on in the plugin settings, Euler Stream tab.");
+    if (!this.config.chatSessionId || !this.config.chatTargetIdc) return refuse("missing-cookies", "Add the sessionid and tt-target-idc cookies of the TikTok account that will post in the plugin settings, Chat (BETA) tab.");
+    if (!this.config.chatCookiesValid) return refuse("invalid-cookies", "The sessionid or tt-target-idc in the plugin settings, Chat (BETA) tab, does not look like a TikTok cookie value.");
+    return { available: true, code: "", reason: "" };
   }
 
   publishStatus() {
@@ -253,8 +270,7 @@ export class TikTokLiveRuntime {
     const user = this.config.uniqueId ? `@${this.config.uniqueId}` : "the LIVE";
     const errors = [];
     const chat = this.chatAvailability();
-    if (this.config.chatEnabled && !chat.available) errors.push(chat.reason.replace(/^deprecated: /, "Send chat is deprecated: "));
-    const signInLine = this.signIn.open ? `Chat sign-in: open ${this.signIn.url} in your browser` : "";
+    if (this.config.chatEnabled && !chat.available) errors.push(chat.code === "deprecated" ? `Send chat is deprecated: ${chat.reason}` : chat.reason);
     const { state, reason } = this.state;
     let status;
     if (state === "connected") {
@@ -270,8 +286,6 @@ export class TikTokLiveRuntime {
       status = { health: state === "error" ? "error" : "degraded", connectionState: state === "error" ? "not connected" : "reconnecting", errors: [reason || this.lastError || "Not connected."] };
     }
     if (errors.length > 0) status.errors = [...(status.errors ?? []), ...errors];
-    // The Studio shows only the first line, and it cannot open a browser for a plugin.
-    if (signInLine) status.errors = [signInLine, ...(status.errors ?? [])];
     this.ctx.setStatus(status);
   }
 
@@ -679,46 +693,21 @@ export class TikTokLiveRuntime {
 
   async sendChat(data) {
     const message = text(data?.message).replace(/\s+/g, " ").trim();
-    const fail = (error, disabledReason = "") => {
-      this.emit("chat-sent", { ...this.common({}, this.config.transport), message, ok: false, error, actorId: "", actorDisplayName: "" });
-      return { ok: false, error, disabledReason };
+    const result = (ok, error, disabledReason) => {
+      this.emit("chat-sent", { ...this.common({}, this.config.transport), message, ok, error, actorId: "", actorDisplayName: "" });
+      return { ok, error, disabledReason };
     };
     const chat = this.chatAvailability();
-    if (!chat.available) return fail(chat.reason.replace(/^deprecated: /, ""), chat.reason.startsWith("deprecated:") ? chat.reason : "disabled");
-    if (!message) return fail("The message is empty.");
-    if (message.length > CHAT_LIMIT) return fail(`TikTok chat messages are at most ${CHAT_LIMIT} characters.`);
-    const session = await readChatSession(this.ctx.secrets);
-    if (!session) return fail("Chat is not signed in. Run TikTok LIVE: chat sign-in.");
+    if (!chat.available) return result(false, chat.reason, chat.code);
+    if (!message) return result(false, "The message is empty.", "");
+    if (message.length > CHAT_LIMIT) return result(false, `TikTok chat messages are at most ${CHAT_LIMIT} characters.`, "");
     try {
-      await this.source.sendChat(message, session);
-      this.emit("chat-sent", { ...this.common({}, this.config.transport), message, ok: true, error: "", actorId: "", actorDisplayName: "" });
-      return { ok: true, error: "", disabledReason: "" };
+      // The room the plugin already reads saves a lookup; without a connection the sender finds it.
+      const roomId = this.state.state === "connected" && this.roomId ? this.roomId : "";
+      await this.chatSender.send({ uniqueId: this.config.uniqueId, apiKey: this.config.signApiKey, sessionId: this.config.chatSessionId, ttTargetIdc: this.config.chatTargetIdc, message, roomId });
+      return result(true, "", "");
     } catch (error) {
-      return fail(explain(error));
-    }
-  }
-
-  async chatSignIn() {
-    const chat = this.chatAvailability();
-    if (!this.config.chatEnabled || !this.flags.chat.enabled) return { ok: false, url: "", expiresInSeconds: 0, error: chat.reason.replace(/^deprecated: /, "") };
-    try {
-      const { url, expiresInSeconds } = await this.signIn.start();
-      this.ctx.log.info(`Chat sign-in: open ${url} in your browser within ${expiresInSeconds / 60} minutes.`);
-      this.publishStatus();
-      return { ok: true, url, expiresInSeconds, error: "" };
-    } catch (error) {
-      return { ok: false, url: "", expiresInSeconds: 0, error: describe(error) };
-    }
-  }
-
-  async chatSignOut() {
-    try {
-      await this.signIn.close();
-      await clearChatSession(this.ctx.secrets);
-      this.publishStatus();
-      return { ok: true, error: "" };
-    } catch (error) {
-      return { ok: false, error: describe(error) };
+      return result(false, explainChat(error), "");
     }
   }
 
@@ -726,7 +715,6 @@ export class TikTokLiveRuntime {
 
   async status() {
     const chat = this.chatAvailability();
-    const signedIn = Boolean(await readChatSession(this.ctx.secrets).catch(() => null));
     return {
       connected: this.state.state === "connected",
       state: this.state.state,
@@ -741,9 +729,8 @@ export class TikTokLiveRuntime {
       sessionStartedAt: isoTime(this.session.startedAt),
       eventsEmitted: this.emitted,
       duplicatesDropped: this.recent.dropped,
-      chatAvailable: chat.available && signedIn,
-      chatSignedIn: signedIn,
-      chatDisabledReason: chat.available ? (signedIn ? "" : "Chat is not signed in.") : chat.reason,
+      chatAvailable: chat.available,
+      chatDisabledReason: chat.code,
     };
   }
 
@@ -831,8 +818,6 @@ export async function startRuntime(ctx, overrides = {}) {
   register("reset-session", (data) => runtime.resetSession(data));
   register("wait-until-live", (data) => runtime.waitUntilLive(data));
   register("send-chat", (data) => runtime.sendChat(data));
-  register("chat-sign-in", () => runtime.chatSignIn());
-  register("chat-sign-out", () => runtime.chatSignOut());
   register("status", () => runtime.status());
   register("room-stats", () => runtime.roomStats());
   register("gift-lookup", (data) => runtime.giftLookup(data));

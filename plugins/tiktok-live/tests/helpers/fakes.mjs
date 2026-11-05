@@ -79,20 +79,32 @@ export function context(config = {}, vault = new Map()) {
   };
 }
 
+/** Records what TikTok: send chat message asks to send; `error` makes the next sends fail. */
+export function fakeChatSender() {
+  const sender = {
+    sent: [],
+    error: null,
+    async send(request) {
+      if (sender.error) throw sender.error;
+      sender.sent.push(request);
+      return { roomId: request.roomId || "7700000000000000009" };
+    },
+  };
+  return sender;
+}
+
 /** A transport that delivers whatever the test pushes, and records what flows ask of it. */
 export function fakeSource({ transport = "direct", capabilities } = {}) {
   const handlers = {};
   const source = {
     transport,
-    capabilities: capabilities ?? { giftList: true, chat: true, isLive: true, roomInfo: true },
+    capabilities: capabilities ?? { giftList: true, isLive: true, roomInfo: true },
     started: 0,
     stopped: 0,
     reconnects: 0,
-    sent: [],
     gifts: [],
     live: false,
     giftError: null,
-    chatError: null,
     onEvent: (handler) => { handlers.event = handler; },
     onState: (handler) => { handlers.state = handler; },
     onRoom: (handler) => { handlers.room = handler; },
@@ -103,11 +115,6 @@ export function fakeSource({ transport = "direct", capabilities } = {}) {
     async fetchGifts() {
       if (source.giftError) throw source.giftError;
       return source.gifts;
-    },
-    async sendChat(message, session) {
-      if (source.chatError) throw source.chatError;
-      source.sent.push({ message, session });
-      return { code: 0 };
     },
     proto: (type, data) => handlers.event({ transport, format: "proto", type, data }),
     tikfinity: (type, data) => handlers.event({ transport: "tikfinity", format: "tikfinity", type, data }),

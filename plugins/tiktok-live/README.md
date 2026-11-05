@@ -26,7 +26,7 @@ plugin/                 the ZIP
   normalize.mjs         protobuf (direct) and 1.x JSON (TikFinity) to one event model
   streaks.mjs battle.mjs session.mjs dedup.mjs gifts.mjs config.mjs util.mjs
   sources/              direct.mjs (tiktok-live-connector), tikfinity.mjs
-  chat/                 BETA chat: flags.mjs, signin.mjs, pages.mjs
+  chat/                 BETA chat: flags.mjs (remote switch), sender.mjs (Euler Stream)
   vendor/               generated bundle, NOTICE.md, THIRD_PARTY_LICENSES.txt
   feature-flags.json    shipped defaults for the remote switches
 build/                  not in the ZIP
@@ -66,7 +66,7 @@ Sending chat is BETA. To disable it in every installed copy without a release, s
 `"enabled": false` (and a short `message`) under `chat` in
 [feature-flags.json](feature-flags.json) on `main`. Copies pick it up within six hours, or
 at their next start, and keep the last answer when offline. `send-chat` then returns
-`disabledReason: "deprecated: <message>"` and the plugin's status says so.
+`disabledReason: "deprecated"` with the message in `error`, and the plugin's status says so.
 
 ## Things measured on 2026-11-05
 
@@ -85,6 +85,6 @@ at their next start, and keep the last answer when offline. `send-chat` then ret
 `npm test` runs these suites without a TikTok account or network: normalisation of real and
 built messages, streaks, battles, the session and its persistence, the runtime with a fake
 transport, the direct transport with a fake library, the TikFinity bridge against a real
-WebSocket server, the chat sign-in page over loopback HTTP, the manifest contract (every
+WebSocket server, sending chat with and without a connection, the manifest contract (every
 trigger fires with exactly its declared fields, every action returns exactly its outputs),
 the bundle in the sandbox, and identical output under pt-BR, de-DE and en-US locales.

@@ -17,7 +17,7 @@ export class TikfinitySource {
     this.log = log;
     this.WebSocketImpl = WebSocketImpl;
     this.transport = "tikfinity";
-    this.capabilities = { giftList: false, chat: false, isLive: false, roomInfo: false };
+    this.capabilities = { giftList: false, isLive: false, roomInfo: false };
     this.handlers = { event: () => {}, state: () => {}, room: () => {} };
     this.socket = null;
     this.stopped = true;
@@ -122,10 +122,6 @@ export class TikfinitySource {
 
   async fetchGifts() {
     throw new Error("The TikFinity bridge has no gift list; gifts are learned as they arrive.");
-  }
-
-  async sendChat() {
-    throw new Error("Sending chat is not available through the TikFinity bridge.");
   }
 
   async stop() {

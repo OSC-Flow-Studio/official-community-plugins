@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SESSION_ID_KEY, TARGET_IDC_KEY, extractCookie, fromThisPage } from "../plugin/chat/signin.mjs";
+import { NotLiveError, extractCookie } from "../plugin/chat/sender.mjs";
 import { fakeSource, proto } from "./helpers/fakes.mjs";
-import { boot, flagsFetch } from "./helpers/scenario.mjs";
+import { boot, flagsFetch, playEverything } from "./helpers/scenario.mjs";
 
 const chat = (n, content, extra = {}) => ["WebcastChatMessage", { common: proto.common("WebcastChatMessage", extra), user: proto.user(n), content }];
 
@@ -162,92 +162,107 @@ test("disconnect stops listening until connect runs again", async () => {
   }
 });
 
-test("sending chat is refused, with the reason, until every condition holds", async () => {
-  const vault = new Map();
-  const off = await boot({}, { vault });
-  try {
-    assert.equal((await off.actions.get("send-chat")({ message: "hi" })).disabledReason, "disabled");
-  } finally {
-    await off.runtime.shutdown();
+const COOKIES = { chatSessionId: "abcdef0123456789", chatTargetIdc: "useast2a" };
+const READY = { chatEnabled: true, signApiKey: "euler_key", uniqueId: "some_streamer", ...COOKIES };
+
+test("sending chat says which setting is missing, with a fixed code, and never tries", async () => {
+  const cases = [
+    [{}, "chat-off", /Chat \(BETA\) enabled/],
+    [{ chatEnabled: true, uniqueId: "" }, "missing-username", /General tab/],
+    [{ chatEnabled: true, uniqueId: "some_streamer" }, "missing-api-key", /Euler Stream, a separate paid service.*Euler Stream tab/],
+    [{ chatEnabled: true, uniqueId: "some_streamer", signApiKey: "euler_key" }, "missing-cookies", /sessionid and tt-target-idc.*Chat \(BETA\) tab/],
+    [{ ...READY, chatTargetIdc: "use ast 2a" }, "invalid-cookies", /does not look like/],
+  ];
+  for (const [config, code, words] of cases) {
+    const run = await boot(config);
+    try {
+      const result = await run.actions.get("send-chat")({ message: "hi" });
+      assert.equal(result.ok, false, code);
+      assert.equal(result.disabledReason, code);
+      assert.match(result.error, words, code);
+      assert.equal(run.chatSender.sent.length, 0, code);
+      const status = await run.actions.get("status")({});
+      assert.equal(status.chatAvailable, false);
+      assert.equal(status.chatDisabledReason, code);
+    } finally {
+      await run.runtime.shutdown();
+    }
   }
-  const noKey = await boot({ chatEnabled: true }, { vault });
+});
+
+test("sending chat works without a connection, with the cookies from the settings", async () => {
+  const run = await boot({ ...READY, chatSessionId: "sessionid=abcdef0123456789; other=1", chatTargetIdc: "tt-target-idc=useast2a" });
   try {
-    assert.match((await noKey.actions.get("send-chat")({ message: "hi" })).error, /Euler Stream API key/);
-  } finally {
-    await noKey.runtime.shutdown();
-  }
-  const ready = await boot({ chatEnabled: true, signApiKey: "euler_key" }, { vault });
-  try {
-    assert.match((await ready.actions.get("send-chat")({ message: "hi" })).error, /not signed in/);
-    vault.set(SESSION_ID_KEY, "abcdef0123456789");
-    vault.set(TARGET_IDC_KEY, "useast2a");
-    assert.match((await ready.actions.get("send-chat")({ message: "x".repeat(151) })).error, /150 characters/);
-    const sent = await ready.actions.get("send-chat")({ message: "  thanks   for the rose " });
+    assert.equal((await run.actions.get("status")({})).chatAvailable, true);
+    assert.match((await run.actions.get("send-chat")({ message: "x".repeat(151) })).error, /150 characters/);
+    const sent = await run.actions.get("send-chat")({ message: "  thanks   for the rose " });
     assert.deepEqual(sent, { ok: true, error: "", disabledReason: "" });
-    assert.deepEqual(ready.source.sent[0], { message: "thanks for the rose", session: { sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" } });
-    assert.equal(ready.of("chat-sent").at(-1).ok, true);
-    assert.equal((await ready.actions.get("status")({})).chatAvailable, true);
+    assert.deepEqual(run.chatSender.sent[0], { uniqueId: "some_streamer", apiKey: "euler_key", sessionId: "abcdef0123456789", ttTargetIdc: "useast2a", message: "thanks for the rose", roomId: "" });
+    assert.equal(run.of("chat-sent").at(-1).ok, true);
+    assert.ok(!run.logs.some(([, message]) => message.includes("abcdef0123456789")), "cookies never reach the log");
   } finally {
-    await ready.runtime.shutdown();
+    await run.runtime.shutdown();
+  }
+});
+
+test("sending chat reuses the room of the open connection, and explains failures", async () => {
+  const run = await boot(READY);
+  try {
+    playEverything(run);
+    await run.actions.get("send-chat")({ message: "hi" });
+    assert.equal(run.chatSender.sent[0].roomId, "7700000000000000001");
+    run.chatSender.error = new NotLiveError("some_streamer");
+    const offline = await run.actions.get("send-chat")({ message: "hi" });
+    assert.deepEqual(offline, { ok: false, error: "@some_streamer is not live right now. Chat can only be sent during a LIVE.", disabledReason: "" });
+    run.chatSender.error = Object.assign(new Error("Sending chats requires an API key & a paid plan, as it uses cloud managed services."), { name: "PremiumFeatureError" });
+    assert.match((await run.actions.get("send-chat")({ message: "hi" })).error, /Webcast Premium add-on, which the free trial does not include/);
+    assert.equal(run.of("chat-sent").at(-1).ok, false);
+  } finally {
+    await run.runtime.shutdown();
+  }
+});
+
+test("sending chat also works while reading through TikFinity", async () => {
+  const run = await boot({ ...READY, transport: "tikfinity" }, { source: fakeSource({ transport: "tikfinity", capabilities: { giftList: false, isLive: false } }) });
+  try {
+    assert.equal((await run.actions.get("send-chat")({ message: "hi" })).ok, true);
+  } finally {
+    await run.runtime.shutdown();
+  }
+});
+
+test("the cookies from the removed sign-in page are deleted from the vault", async () => {
+  const vault = new Map([["chat-session-id", "abcdef0123456789"], ["chat-tt-target-idc", "useast2a"]]);
+  const run = await boot({}, { vault });
+  try {
+    assert.equal(vault.has("chat-session-id"), false);
+    assert.equal(vault.has("chat-tt-target-idc"), false);
+  } finally {
+    await run.runtime.shutdown();
   }
 });
 
 test("the maintainers' switch turns sending off as deprecated, without touching TikTok", async () => {
-  const vault = new Map([[SESSION_ID_KEY, "abcdef0123456789"], [TARGET_IDC_KEY, "useast2a"]]);
-  const run = await boot({ chatEnabled: true, signApiKey: "euler_key" }, { vault, fetchImpl: flagsFetch({ enabled: false, message: "TikTok is suspending accounts." }) });
+  const vault = new Map();
+  const run = await boot(READY, { vault, fetchImpl: flagsFetch({ enabled: false, message: "TikTok is suspending accounts." }) });
   try {
     await new Promise((resolve) => setImmediate(resolve));
     const result = await run.actions.get("send-chat")({ message: "hi" });
     assert.equal(result.ok, false);
-    assert.match(result.disabledReason, /^deprecated: .*suspending accounts/);
-    assert.equal(run.source.sent.length, 0);
+    assert.equal(result.disabledReason, "deprecated");
+    assert.match(result.error, /switched off by the plugin maintainers\. TikTok is suspending accounts\./);
+    assert.equal(run.chatSender.sent.length, 0);
     assert.match(run.statuses.at(-1).errors.join(" "), /Send chat is deprecated/);
-    assert.equal((await run.actions.get("chat-sign-in")({})).ok, false);
     assert.match(vault.get("feature-flags-cache"), /"enabled":false/);
   } finally {
     await run.runtime.shutdown();
   }
   // Offline next time: the cached answer holds.
-  const offline = await boot({ chatEnabled: true, signApiKey: "euler_key" }, { vault, fetchImpl: async () => { throw new Error("offline"); } });
+  const offline = await boot(READY, { vault, fetchImpl: async () => { throw new Error("offline"); } });
   try {
-    assert.match((await offline.actions.get("send-chat")({ message: "hi" })).disabledReason, /^deprecated:/);
+    assert.equal((await offline.actions.get("send-chat")({ message: "hi" })).disabledReason, "deprecated");
   } finally {
     await offline.runtime.shutdown();
-  }
-});
-
-test("the sign-in page saves the cookies to the vault and nothing else accepts them", async () => {
-  const vault = new Map();
-  const run = await boot({ chatEnabled: true, signApiKey: "euler_key" }, { vault });
-  try {
-    const { ok, url, expiresInSeconds } = await run.actions.get("chat-sign-in")({});
-    assert.equal(ok, true);
-    assert.equal(expiresInSeconds, 600);
-    assert.match(url, /^http:\/\/127\.0\.0\.1:\d+\/[A-Za-z0-9_-]{32}$/);
-    assert.equal(run.statuses.at(-1).errors[0], `Chat sign-in: open ${url} in your browser`);
-
-    const form = await fetch(url);
-    assert.equal(form.status, 200);
-    assert.match(form.headers.get("content-security-policy"), /default-src 'none'/);
-    assert.equal(form.headers.get("referrer-policy"), "same-origin");
-    assert.match(await form.text(), /<meta name="referrer" content="same-origin">/);
-    assert.equal((await fetch(`${new URL(url).origin}/wrong-token`)).status, 410);
-
-    const post = (body, headers = {}) => fetch(url, { method: "POST", body: new URLSearchParams(body), headers: { "content-type": "application/x-www-form-urlencoded", ...headers } });
-    assert.equal((await post({ sessionId: "abc", ttTargetIdc: "useast2a" })).status, 400);
-    assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "https://evil.example" })).status, 403);
-    assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "null", "sec-fetch-site": "cross-site" })).status, 403);
-    assert.equal((await post({ sessionId: "abcdef0123456789", ttTargetIdc: "useast2a" }, { origin: "null" })).status, 403);
-    assert.equal(vault.has(SESSION_ID_KEY), false);
-    // What Chrome sends for the page's own form post, measured on 2026-11-05.
-    assert.equal((await post({ sessionId: "sessionid=abcdef0123456789; other=1", ttTargetIdc: "tt-target-idc=useast2a" }, { origin: "null", "sec-fetch-site": "same-origin" })).status, 200);
-    assert.equal(vault.get(SESSION_ID_KEY), "abcdef0123456789");
-    assert.equal(vault.get(TARGET_IDC_KEY), "useast2a");
-    assert.ok(!run.logs.some(([, message]) => message.includes("abcdef0123456789")), "cookies never reach the log");
-    assert.deepEqual(await run.actions.get("chat-sign-out")({}), { ok: true, error: "" });
-    assert.equal(vault.has(SESSION_ID_KEY), false);
-  } finally {
-    await run.runtime.shutdown();
   }
 });
 
@@ -272,14 +287,3 @@ test("stream end closes open streaks and the battle, and other TikTok messages p
   }
 });
 
-test("the sign-in page accepts only its own form post", () => {
-  const host = "127.0.0.1:40554";
-  assert.equal(fromThisPage({ host, origin: "null", "sec-fetch-site": "same-origin" }), true, "Chrome under a no-referrer policy");
-  assert.equal(fromThisPage({ host, origin: `http://${host}`, "sec-fetch-site": "same-origin" }), true);
-  assert.equal(fromThisPage({ host, origin: "https://evil.example", "sec-fetch-site": "cross-site" }), false);
-  assert.equal(fromThisPage({ host, origin: "null", "sec-fetch-site": "cross-site" }), false);
-  assert.equal(fromThisPage({ host, "sec-fetch-site": "same-site" }), false, "another port on 127.0.0.1");
-  assert.equal(fromThisPage({ host }), true, "no browser headers at all");
-  assert.equal(fromThisPage({ host, origin: `http://${host}` }), true);
-  assert.equal(fromThisPage({ host, origin: "null" }), false);
-});

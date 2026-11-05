@@ -1,14 +1,14 @@
 // Boots the runtime against a fake transport, and plays a stream that fires every trigger.
 import { startRuntime } from "../../plugin/runtime.mjs";
-import { context, fakeClock, fakeSource, fixture, proto } from "./fakes.mjs";
+import { context, fakeChatSender, fakeClock, fakeSource, fixture, proto } from "./fakes.mjs";
 
 export const flagsFetch = (chat = { enabled: true, message: "" }) => async () => ({ ok: true, json: async () => ({ version: 1, chat }) });
 
-export async function boot(config = {}, { vault, source = fakeSource(), clock = fakeClock(), fetchImpl = flagsFetch(), ...overrides } = {}) {
+export async function boot(config = {}, { vault, source = fakeSource(), clock = fakeClock(), fetchImpl = flagsFetch(), chatSender = fakeChatSender(), ...overrides } = {}) {
   const fixtureCtx = context(config, vault);
-  const runtime = await startRuntime(fixtureCtx.ctx, { createSource: () => source, timers: clock.timers, now: clock.now, fetchImpl, ...overrides });
+  const runtime = await startRuntime(fixtureCtx.ctx, { createSource: () => source, timers: clock.timers, now: clock.now, fetchImpl, chatSender, ...overrides });
   await new Promise((resolve) => setImmediate(resolve));
-  return { ...fixtureCtx, runtime, source, clock };
+  return { ...fixtureCtx, runtime, source, clock, chatSender };
 }
 
 const anchors = [

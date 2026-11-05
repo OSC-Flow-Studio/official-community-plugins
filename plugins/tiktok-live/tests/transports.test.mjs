@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import test from "node:test";
 import { WebSocketServer } from "ws";
+import { ChatSender, NotLiveError } from "../plugin/chat/sender.mjs";
 import { DirectSource, explain } from "../plugin/sources/direct.mjs";
 import { TikfinitySource } from "../plugin/sources/tikfinity.mjs";
 import { fakeClock } from "./helpers/fakes.mjs";
@@ -43,6 +44,9 @@ function fakeLibrary(script) {
     }
     async fetchRoomInfo() {
       return { data: { owner: { id_str: "100", display_id: "host" }, title: "Hi", create_time: 1793890000, status: 2 } };
+    }
+    async fetchRoomId() {
+      return script.roomId ?? "R2";
     }
     async sendMessage(content, roomId) {
       script.sent.push({ content, roomId, session: this.options.session });
@@ -129,16 +133,21 @@ test("a dropped connection reconnects; a stream end waits for the next LIVE", as
   await run.source.stop();
 });
 
-test("chat goes out through a separate client that carries the session; reading stays anonymous", async () => {
-  const clock = fakeClock();
-  const script = { connect: ["ok"], live: [], sent: [] };
-  const run = direct(script, clock);
-  await run.source.start();
-  await settle(10);
-  await run.source.sendChat("hello", { sessionId: "s1", ttTargetIdc: "useast2a" });
-  assert.equal(run.made[0].options.session, undefined);
-  assert.deepEqual(script.sent[0], { content: "hello", roomId: "R1", session: { cookie: { type: "cookie", value: { sessionId: "s1", ttTargetIdc: "useast2a" } } } });
-  await run.source.stop();
+test("chat goes out through its own client with the cookies, and finds the room without a connection", async () => {
+  const script = { connect: [], live: [true], sent: [] };
+  const { made, lib } = fakeLibrary(script);
+  const sender = new ChatSender({ load: async () => lib });
+  const request = { uniqueId: "host", apiKey: "k1", sessionId: "s1", ttTargetIdc: "useast2a", message: "hello" };
+  assert.deepEqual(await sender.send(request), { roomId: "R2" });
+  assert.equal(lib.SignConfig.apiKey, "k1");
+  assert.equal(made[0].options.fetchRoomInfoOnConnect, false);
+  assert.deepEqual(script.sent[0], { content: "hello", roomId: "R2", session: { cookie: { type: "cookie", value: { sessionId: "s1", ttTargetIdc: "useast2a" } } } });
+  // The open connection's room skips the lookup.
+  assert.deepEqual(await sender.send({ ...request, roomId: "R1" }), { roomId: "R1" });
+  assert.equal(script.sent[1].roomId, "R1");
+  // Offline: nothing is sent.
+  await assert.rejects(sender.send(request), (error) => error instanceof NotLiveError && /@host is not live/.test(error.message));
+  assert.equal(script.sent.length, 2);
 });
 
 test("errors are explained in plain words without echoing secrets", () => {
@@ -172,7 +181,6 @@ test("the TikFinity bridge relays events, and reconnects when TikFinity restarts
     server = new WebSocketServer({ port, host: "127.0.0.1" });
     await new Promise((resolve) => server.once("listening", resolve));
     await waitFor(() => states.at(-1) === "connected", 8000);
-    await assert.rejects(source.sendChat("hi"), /not available/);
   } finally {
     await source.stop();
     for (const client of server.clients) client.terminate();

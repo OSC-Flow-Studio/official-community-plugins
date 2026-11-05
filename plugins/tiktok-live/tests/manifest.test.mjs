@@ -48,7 +48,7 @@ test("every action and input is registered and returns exactly its declared fiel
     const inputs = {
       connect: [{}], disconnect: [{}], "refresh-gifts": [{}], "reset-session": [{ scope: "coins" }, { scope: "nope" }],
       "wait-until-live": [{ timeoutSeconds: 1 }], "send-chat": [{ message: "" }, { message: "hello" }],
-      "chat-sign-in": [{}], "chat-sign-out": [{}], status: [{}], "room-stats": [{}],
+      status: [{}], "room-stats": [{}],
       "gift-lookup": [{ giftId: 5655 }, { giftName: "nothing" }], "battle-state": [{}], "top-gifters": [{ limit: 3 }],
       "user-stats": [{ uniqueId: "viewer_6" }, { uniqueId: "" }],
     };

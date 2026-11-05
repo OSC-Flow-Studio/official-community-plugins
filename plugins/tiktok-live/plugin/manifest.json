@@ -43,9 +43,14 @@
         "description": "The LIVE to watch and how to reach it."
       },
       {
+        "id": "euler",
+        "label": "Euler Stream",
+        "description": "A separate service: signatures for the direct connection, and the only way to send chat."
+      },
+      {
         "id": "direct",
         "label": "Direct connection",
-        "description": "Connecting to TikTok through Euler Stream's signing service."
+        "description": "Retries and live checks for the direct connection."
       },
       {
         "id": "tikfinity",
@@ -122,18 +127,18 @@
         "pattern": "^\\S{1,3}$"
       },
       {
-        "key": "directSection",
+        "key": "eulerSection",
         "type": "separator",
-        "label": "Euler Stream signing",
-        "description": "TikTok only accepts signed connections, and the direct connection gets its signatures from Euler Stream. Without a key it shares Euler's free anonymous limit, which can make connecting wait a few minutes. A free key at eulerstream.com raises it; the gift list and sending chat need paid plans.",
-        "tab": "direct"
+        "label": "Euler Stream is a separate service",
+        "description": "Euler Stream (https://www.eulerstream.com) is not part of TikTok or of this plugin, and its account and plans are yours. TikTok only accepts signed connections, and the direct connection gets its signatures from Euler. Without a key it shares Euler's free anonymous limit, which can make connecting wait a few minutes, and a free key raises that limit. Sending chat always needs a key with the Webcast Premium add-on, which Euler sells separately and leaves out of its free trial.",
+        "tab": "euler"
       },
       {
         "key": "signApiKey",
         "type": "secret",
         "label": "Euler Stream API key",
-        "description": "Optional. Kept in the Studio's encrypted vault and sent only to Euler Stream.",
-        "tab": "direct"
+        "description": "Optional for reading the LIVE, required for sending chat. Create it in your Euler Stream dashboard. Kept in the Studio's encrypted vault and sent only to Euler Stream.",
+        "tab": "euler"
       },
       {
         "key": "reconnectMinSeconds",
@@ -185,16 +190,37 @@
         "key": "chatSection",
         "type": "separator",
         "label": "Sending chat is BETA",
-        "description": "It may stop working or be switched off by the plugin maintainers at any time. TikTok may suspend accounts that post automatically: use a secondary account. It needs the direct connection and an Euler Stream key on a plan that includes chat.",
+        "description": "It may stop working, or be switched off by the plugin maintainers at any time. TikTok may suspend accounts that post automatically: use a secondary account. TikTok: send chat message needs three things, all set here: this switch on, an Euler Stream API key with the Webcast Premium add-on (Euler Stream tab), and the two cookies below. It works with either connection, and the plugin does not have to be connected.",
         "tab": "chat"
       },
       {
         "key": "chatEnabled",
         "type": "boolean",
         "label": "Chat (BETA) enabled",
-        "description": "Allows TikTok: send chat message. Sign in with the TikTok: chat sign-in block, which gives you a page to open in your browser.",
+        "description": "Allows TikTok: send chat message. While off, the block sends nothing and returns disabledReason chat-off.",
         "tab": "chat",
         "default": false
+      },
+      {
+        "key": "chatCookiesHelp",
+        "type": "separator",
+        "label": "Where to find the two cookies",
+        "description": "In your browser, sign in to tiktok.com with the account that will post. Press F12, open Application (Chrome, Edge) or Storage (Firefox), then Cookies, https://www.tiktok.com, and copy the values of sessionid and tt-target-idc. Pasting name=value or a whole cookie line also works. Signing out of TikTok in that browser ends the session, and then the cookies stop working.",
+        "tab": "chat"
+      },
+      {
+        "key": "chatSessionId",
+        "type": "secret",
+        "label": "TikTok sessionid cookie",
+        "description": "Signs in as the account, so treat it like a password. Kept in the Studio's encrypted vault and sent only to Euler Stream, which posts each message.",
+        "tab": "chat"
+      },
+      {
+        "key": "chatTargetIdc",
+        "type": "secret",
+        "label": "TikTok tt-target-idc cookie",
+        "description": "The account's TikTok data centre, such as useast2a. Kept in the vault with the sessionid.",
+        "tab": "chat"
       },
       {
         "key": "giftStreakMode",
@@ -295,7 +321,7 @@
         "key": "aboutEuler",
         "type": "separator",
         "label": "Euler Stream",
-        "description": "The signing service behind the direct connection. https://www.eulerstream.com",
+        "description": "A separate service: it signs the direct connection, and it posts chat for TikTok: send chat message. https://www.eulerstream.com",
         "tab": "about"
       },
       {
@@ -4201,7 +4227,7 @@
       "type": "action.x.tiktok-live.send-chat",
       "label": "TikTok: send chat message (BETA)",
       "category": "TikTok LIVE",
-      "description": "BETA, may be switched off by the plugin maintainers without notice. Sends a message to the LIVE's chat as the signed-in account. Needs Chat (BETA) on, TikTok: chat sign-in, the direct connection and an Euler Stream key on a plan that includes chat. TikTok may suspend accounts that post automatically; use a secondary account.",
+      "description": "BETA, may be switched off by the plugin maintainers without notice. Posts a message in the LIVE's chat as the TikTok account in the plugin settings. It is set up in the settings, not in a flow: Chat (BETA) on, an Euler Stream API key with Euler's Webcast Premium add-on (Euler Stream is a separate, paid service; the free trial does not include it), and the account's two session cookies. It does not need TikTok: connect, only a streamer who is live. TikTok may suspend accounts that post automatically; use a secondary account.",
       "role": "action",
       "appearance": {
         "icon": "send"
@@ -4232,61 +4258,7 @@
         {
           "path": "disabledReason",
           "type": "string",
-          "description": "Why sending is unavailable: disabled, or deprecated: followed by the maintainers' note. Empty when it was tried."
-        }
-      ]
-    },
-    {
-      "type": "action.x.tiktok-live.chat-sign-in",
-      "label": "TikTok: chat sign-in (BETA)",
-      "category": "TikTok LIVE",
-      "description": "Starts a sign-in page on this computer for sending chat. Open its url in your browser within 10 minutes: it is in the output and at the top of the plugin's status, and the Studio does not open it for you. The page explains how to copy the two TikTok session cookies and saves them to the Studio's encrypted vault.",
-      "role": "action",
-      "appearance": {
-        "icon": "user"
-      },
-      "outputSchema": [
-        {
-          "path": "ok",
-          "type": "boolean",
-          "description": "False when the action could not do its job; error says why."
-        },
-        {
-          "path": "url",
-          "type": "string",
-          "description": "The page to open in your browser, on 127.0.0.1."
-        },
-        {
-          "path": "expiresInSeconds",
-          "type": "number",
-          "description": "How long the page stays open."
-        },
-        {
-          "path": "error",
-          "type": "string",
-          "description": "Why it failed, or empty."
-        }
-      ]
-    },
-    {
-      "type": "action.x.tiktok-live.chat-sign-out",
-      "label": "TikTok: chat sign-out (BETA)",
-      "category": "TikTok LIVE",
-      "description": "Deletes the saved TikTok session cookies from the vault.",
-      "role": "action",
-      "appearance": {
-        "icon": "power"
-      },
-      "outputSchema": [
-        {
-          "path": "ok",
-          "type": "boolean",
-          "description": "False when the action could not do its job; error says why."
-        },
-        {
-          "path": "error",
-          "type": "string",
-          "description": "Why it failed, or empty."
+          "description": "Why it did not try, as a fixed code: chat-off, deprecated, missing-username, missing-api-key, missing-cookies or invalid-cookies. error says the same in words and names the setting. Empty when it tried."
         }
       ]
     },
@@ -4371,14 +4343,9 @@
           "description": "True when TikTok: send chat message can send right now."
         },
         {
-          "path": "chatSignedIn",
-          "type": "boolean",
-          "description": "True when session cookies are saved."
-        },
-        {
           "path": "chatDisabledReason",
           "type": "string",
-          "description": "Why chat cannot send, or empty."
+          "description": "Why TikTok: send chat message would not try, with the same codes as its disabledReason, or empty."
         }
       ]
     },

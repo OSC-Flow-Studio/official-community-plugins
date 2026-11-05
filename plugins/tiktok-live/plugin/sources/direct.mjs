@@ -11,7 +11,7 @@ import { describe } from "../util.mjs";
 const RATE_LIMIT_FLOOR_MS = 60_000;
 // Requests go out with one fixed English location so TikTok's texts (gift names, notice
 // patterns) are the same on every computer. Matching never depends on them anyway.
-const ENGLISH_LOCATION = { lang_country: "en-US", lang: "en", country: "US", tz_name: "America/New_York" };
+export const ENGLISH_LOCATION = { lang_country: "en-US", lang: "en", country: "US", tz_name: "America/New_York" };
 
 const loadVendor = () => import("../vendor/tiktok-live-connector.mjs");
 
@@ -52,7 +52,7 @@ export class DirectSource {
     this.log = log;
     this.load = load;
     this.transport = "direct";
-    this.capabilities = { giftList: true, chat: true, isLive: true, roomInfo: true };
+    this.capabilities = { giftList: true, isLive: true, roomInfo: true };
     this.handlers = { event: () => {}, state: () => {}, room: () => {} };
     this.connection = null;
     this.stopped = true;
@@ -230,25 +230,6 @@ export class DirectSource {
   async fetchGifts() {
     if (!this.connection) throw new Error("Not connected to a LIVE right now.");
     return this.connection.fetchAvailableGifts();
-  }
-
-  /**
-   * Sends one chat message as the signed-in account. A separate client carries the session
-   * cookies, so the connection that reads the LIVE stays anonymous.
-   */
-  async sendChat(content, session) {
-    const roomId = this.connection?.roomId;
-    if (!roomId) throw new Error("Not connected to a LIVE right now.");
-    if (!session?.sessionId || !session?.ttTargetIdc) throw new Error("Chat is not signed in.");
-    const lib = this.lib;
-    lib.SignConfig.apiKey = this.signApiKey || undefined;
-    lib.SignConfig.cachedInstance = undefined;
-    const sender = new lib.TikTokLiveConnection(this.uniqueId, {
-      fetchRoomInfoOnConnect: false,
-      clientPresets: { ...lib.getRandomPresets(), location: ENGLISH_LOCATION },
-      session: { cookie: { type: "cookie", value: { sessionId: session.sessionId, ttTargetIdc: session.ttTargetIdc } } },
-    });
-    return sender.sendMessage(content, roomId);
   }
 
   async stop() {

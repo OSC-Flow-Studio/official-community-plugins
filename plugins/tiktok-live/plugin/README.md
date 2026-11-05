@@ -16,7 +16,7 @@ Stream or TikFinity.
    - **Direct connection** (default): the plugin talks to TikTok itself. TikTok accepts
      only signed connections, and the signatures come from Euler Stream. Without a key the
      plugin shares Euler's free anonymous limit, which can make it wait a few minutes before
-     connecting. A free key from eulerstream.com, pasted under **Direct connection**,
+     connecting. A free key from eulerstream.com, pasted in the **Euler Stream** tab,
      raises that limit.
    - **TikFinity app**: open TikFinity on this computer and connect it to your LIVE. The
      plugin listens to TikFinity's local connection and needs nothing from Euler Stream.
@@ -82,23 +82,47 @@ gift streak) flows of their own.
 ## Sending chat (BETA)
 
 Sending chat is BETA and off by default. It may stop working, and the plugin maintainers
-can switch it off for every installed copy at any time. When they do, **TikTok: send chat
-message** returns `disabledReason` starting with `deprecated:` and does nothing. TikTok may
-suspend accounts that post automatically, so use a secondary account.
+can switch it off for every installed copy at any time. TikTok may suspend accounts that
+post automatically, so use a secondary account.
 
-It needs the direct connection and an Euler Stream key on a plan that includes chat. To
-sign in, turn on **Chat (BETA) enabled**, run **TikTok: chat sign-in**, then open the address
-it returns in your browser. The Studio does not open it for you; the address is also the
-first line of the plugin's status. The page runs on this computer for ten
-minutes, explains how to copy the account's `sessionid` and `tt-target-idc` cookies, and
-saves them to the Studio's encrypted vault. They are sent only to Euler Stream, which posts
-each message for you. **TikTok: chat sign-out** deletes them.
+TikTok has no API for sending chat. The plugin sends it through
+[Euler Stream](https://www.eulerstream.com), a separate service with its own account and
+prices. Sending needs Euler's Webcast Premium add-on, which the free trial does not include.
+Everything is set up in the plugin settings, not in a flow:
+
+1. **Euler Stream** tab: paste an API key that has the Webcast Premium add-on.
+2. **Chat (BETA)** tab: turn on **Chat (BETA) enabled**.
+3. Same tab: paste the `sessionid` and `tt-target-idc` cookies of the TikTok account that
+   will post. To find them, sign in to tiktok.com in your browser with that account, press
+   F12, open Application (Chrome, Edge) or Storage (Firefox), then Cookies,
+   https://www.tiktok.com. Pasting `name=value` or a whole cookie line also works.
+
+The two cookies sign in as the account, so treat them like a password. The Studio keeps them
+in its encrypted vault and sends them only to Euler Stream, which posts each message. Signing
+out of TikTok in that browser ends the session, and then the cookies stop working.
+
+**TikTok: send chat message** does not need **TikTok: connect**. It only needs the streamer to
+be live, and it works with either connection. When it does not try, `disabledReason` says why
+with a fixed code, and `error` says the same in words and names the setting:
+
+| `disabledReason` | What to change |
+| --- | --- |
+| `chat-off` | Turn on **Chat (BETA) enabled**. |
+| `deprecated` | Nothing: the maintainers switched sending off, and `error` carries their note. |
+| `missing-username` | Add the TikTok username under **General**. |
+| `missing-api-key` | Add the Euler Stream API key. |
+| `missing-cookies` | Add both cookies. |
+| `invalid-cookies` | Copy the cookie values again. |
+
+An empty `disabledReason` with `ok` false means it tried and failed. Examples are a streamer
+who is not live, or a key without the add-on.
 
 ## What the plugin stores
 
 In the Studio's encrypted vault: the session counters and gifter ranking, the gifts it has
 learned, the ids of the last 2000 viewers (to recognise returning viewers), the last
-feature switches it downloaded, and, if you signed in, the two chat cookies.
+feature switches it downloaded. The chat cookies and the Euler key are settings, which the
+Studio also keeps in that vault.
 
 ## Third-party software
 

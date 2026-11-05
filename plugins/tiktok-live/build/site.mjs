@@ -42,7 +42,7 @@ const inputs = manifest.nodeTypes.filter((item) => item.role === "input");
 const credits = [
   ["tiktok-live-connector", `${versions.dependencies["tiktok-live-connector"]}, by zerodytrash. The TikTok client behind the direct connection. AGPL-3.0 with additional permissions.`, "https://github.com/zerodytrash/TikTok-Live-Connector"],
   ["tiktok-live-proto", "By isaackogan. TikTok's message definitions. AGPL-3.0 with additional permissions.", "https://github.com/isaackogan/TikTok-Webcast-Protobuf"],
-  ["Euler Stream", "The signing service the direct connection uses.", "https://www.eulerstream.com"],
+  ["Euler Stream", "A separate service that signs the direct connection and posts chat.", "https://www.eulerstream.com"],
   ["TikFinity", "The desktop app behind the optional bridge; not bundled.", "https://tikfinity.zerody.one"],
   ["This page", `GSAP ${versions.devDependencies.gsap}, Inter and JetBrains Mono (SIL Open Font License), Lucide icons (ISC).`, ""],
 ];

@@ -8,9 +8,7 @@ web
 
 ## Stack
 
-Plugin pages are plain HTML and CSS with no framework. The TikTok LIVE chat sign-in pages
-are self-contained strings served from 127.0.0.1 by the plugin: inline CSS, no external
-requests. The TikTok LIVE landing page (`plugins/tiktok-live/site/`) is static HTML and CSS
+Plugin pages are plain HTML and CSS with no framework. The TikTok LIVE landing page (`plugins/tiktok-live/site/`) is static HTML and CSS
 with GSAP bundled by esbuild from `plugins/tiktok-live/build/`; it has no deploy target yet.
 
 ## Users
